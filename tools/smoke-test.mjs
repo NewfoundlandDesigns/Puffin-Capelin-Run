@@ -21,7 +21,7 @@ const ctx = new Proxy({}, {
 });
 const els = {};
 const el = id => ({
-  id, hidden: id === 'say' || id === 'wardPanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
+  id, hidden: id === 'say' || id === 'wardPanel' || id === 'pausePanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
   children: [], offsetWidth: 1, parentElement: {},
   classList: { toggle() {}, add() {}, remove() {} },
   querySelector: () => ({ style: {}, focus() {}, classList: { toggle() {}, remove() {} } }),
@@ -38,7 +38,8 @@ Object.assign(globalThis, {
   HTMLButtonElement: function () {},
   localStorage: { getItem: k => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); } },
   requestAnimationFrame: cb => { raf = cb; },
-  window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 }
+  window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 },
+  location: { search: '?dev' }                          // testing mode: every level and outfit open
 });
 (0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds };');
 const T = globalThis.__T;
@@ -140,6 +141,21 @@ check('wardrobe shows a row per slot', !els.wardPanel.hidden && rows.length === 
 check('each row has none plus its items', T.SLOTS.every((sl, i) => rows[i].children[1].children.length === 1 + T.OUTFITS.filter(o => o.slot === sl.id).length));
 els.wardDone.onclick();
 check('wardrobe closes to the level picker', els.wardPanel.hidden && !els.startPanel.hidden);
+
+// 2e. Pause: P freezes the run, Space resumes, and Choose level quits to the picker
+T.start(0); quiet(T.st); T.st.p.inv = 99;
+for (let f = 0; f < 10; f++) frame();
+key('KeyP'); key('KeyP', false);
+const distAtPause = T.st.dist;
+for (let f = 0; f < 60; f++) frame();
+check('P pauses the run', !els.pausePanel.hidden && T.st.dist === distAtPause);
+key('Space'); key('Space', false);
+for (let f = 0; f < 10; f++) frame();
+check('Space resumes it', els.pausePanel.hidden && T.st.dist > distAtPause);
+winHandlers.blur();
+check('losing focus pauses it', !els.pausePanel.hidden);
+els.quitBtn.onclick();
+check('quitting from pause goes to the level picker', !T.running && els.pausePanel.hidden && !els.startPanel.hidden);
 
 // 3. Whale: swallowed in the ring near the surface, safe deep beneath it
 const whaleIdx = T.LEVELS.findIndex(l => l.whales);

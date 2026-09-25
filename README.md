@@ -83,7 +83,9 @@ tools/smoke-test.mjs  plays through every level, the tutorial and key failure ca
 
 The scripts are plain classic scripts that share globals, loaded in order, so the game runs straight from the file system.
 
-Testing: `UNLOCK_ALL` in `src/util.js` makes every level and outfit available (currently on; set it to `false` before release). Shift+U on the level picker also unlocks everything.
+Testing mode: open the game with `?dev` on the end of the address (`index.html?dev`) to make every level and outfit available. Shift+U on the level picker then unlocks every level for good. Players never see testing mode.
+
+Pause: the pause button (bottom right), P or Esc. The game also pauses by itself when the tab is hidden or the window loses focus.
 
 ## Single-file build
 
