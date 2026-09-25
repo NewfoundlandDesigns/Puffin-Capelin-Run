@@ -36,6 +36,7 @@ hunters.js   great black-backed gulls that swoop (fatal)
 whales.js    humpbacks: bubble-ring warning, lunge, swallow (fatal); drawn in two layers
 jaegers.js   pirate seabirds that steal a carried stack
 icebergs.js  drifting bergs, mostly underwater; bump knocks the stack loose
+gannets.js   plunge-diving gannets: shadow warning, spear dive aimed at puffin or a school
 finale.js    end-of-level zoom and crash landing at the home colony
 tutorial.js  guided How to play run (TUT_STEPS)
 chatter.js   puffling and puffin speech bubbles (edit the lines here)
@@ -75,11 +76,17 @@ Key ideas:
 
 ## Design decisions so far (and why)
 
-- Six levels, each adding one new foe plus a little of an earlier one, so early levels
+- Seven levels, each adding one new foe plus a little of an earlier one, so early levels
   stay approachable. Order: Capelin Scull (seals, thieving gulls), Gull Island (seals + a
   few hunting gulls), Baccalieu Tickle (more of both, storm), Cape St. Mary's (jaegers +
   odd hunter), Iceberg Alley (bergs + a few jaegers), Trinity Bay (whales + a few seals).
-  Trinity Bay is last because whales are the hardest foe.
+  Trinity Bay (whales), then Funk Island (gannets + a few whales), now the hardest.
+- Gannets (Funk Island): one circles above while its shadow slides in (`GANNET.WARN`), then
+  dives straight down to `GANNET.DEPTH` below the surface. It's aimed at the puffin's depth at
+  spawn (with some jitter) or, 45% of the time, at a school ahead, so it competes for fish.
+  Dodge by changing depth as the shadow arrives, or dive deeper than it goes. A hit only
+  costs the stack (like gulls/jaegers); a plunge eats up to 2 capelin and scatters the rest
+  (`f.dy`).
 - Whales are fatal, but only the head/mouth once it breaks the surface; diving below the
   shaded warning zone passes safely under. The warning zone matches the danger depth.
 - Hunger replaced the timer: 25 s for a full meter on levels 1 to 3, then 27, 28, 30.
@@ -95,7 +102,7 @@ Key ideas:
   burrow in; delivering in time saves the run. The puffling grows with fish fed
   (`st.fedFish`, `pufflingSize()`), in the HUD and the burrow, and its weight is on the end
   screen. Growth is cosmetic on purpose: Mark didn't want it to make the puffling hungrier.
-- Seal, hunting gull, and whale catches end the run; ordinary gulls, jaegers, icebergs and
+- Seal, hunting gull, and whale catches end the run; ordinary gulls, jaegers, gannets, icebergs and
   running out of air only cost the stack.
 
 ## Before release

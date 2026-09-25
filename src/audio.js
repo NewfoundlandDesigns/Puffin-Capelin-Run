@@ -99,6 +99,9 @@ const Snd = (() => {
       if (gold) tone(semi(1568, Math.min(i, 14)), 0.12, { type: 'triangle', vol: 0.06, delay: 0.03 });
     },
     gulp() { tone(220, 0.25, { type: 'sine', vol: 0.18, slideTo: 90 }); },
+    gannetCall() { tone(520, 0.12, { type: 'sawtooth', vol: 0.05, slideTo: 380 }); tone(480, 0.14, { type: 'sawtooth', vol: 0.05, slideTo: 340, delay: 0.14 }); },
+    gannetDive() { tone(2200, 0.42, { type: 'sine', vol: 0.06, slideTo: 700 }); noise(0.4, { vol: 0.06, freq: 2500, sweepTo: 900, q: 1 }); },
+    gannetHit() { noise(0.14, { vol: 0.28, freq: 600, filter: 'lowpass' }); tone(300, 0.2, { type: 'triangle', vol: 0.12, slideTo: 150 }); },
     jaegerCall() { tone(1500, 0.16, { type: 'square', vol: 0.05, slideTo: 1100 }); tone(1600, 0.2, { type: 'square', vol: 0.05, slideTo: 1000, delay: 0.18 }); },
     jaegerSteal() { noise(0.1, { vol: 0.2, freq: 900 }); [0, -4, -7].forEach((s, i) => tone(semi(880, s), 0.1, { type: 'square', vol: 0.05, delay: i * 0.07 })); },
     bergBump() { noise(0.1, { vol: 0.22, freq: 400, filter: 'lowpass' }); tone(2400, 0.25, { type: 'triangle', vol: 0.07, slideTo: 2000 }); tone(3100, 0.2, { type: 'sine', vol: 0.05, delay: 0.03 }); },

@@ -13,11 +13,12 @@ Each level brings in one new foe, plus a little of something from earlier, so th
 3. **Baccalieu Tickle.** More seals and more hunting gulls, in a storm. A "tickle" is a narrow strait; the one by Baccalieu Island is known for rough water.
 4. **Cape St. Mary's.** Jaegers, pirate seabirds that chase any puffin carrying fish and steal the stack. Dive to lose them. The odd hunting gull.
 5. **Iceberg Alley.** Icebergs drifting out of the fog, most of each one hidden underwater. Bumping one knocks your catch loose. A few jaegers.
-6. **Trinity Bay.** The hardest level: humpback whales feeding on capelin. A bubble ring and a shaded zone warn where one will lunge. Get caught in its mouth and it swallows you, which ends the run; get clear of the ring or dive deep and pass under it. A few seals too.
+6. **Trinity Bay.** Humpback whales feeding on capelin. A bubble ring and a shaded zone warn where one will lunge. Get caught in its mouth and it swallows you, which ends the run; get clear of the ring or dive deep and pass under it. A few seals too.
+7. **Funk Island.** The hardest level: northern gannets, which plunge-dive like spears from high above. A shadow slides across the water toward you while one circles overhead, then it drops straight down and deep into the sea, aiming at you or at the capelin you're after. A hit knocks your catch loose; change depth as the shadow reaches you, or dive below it. A few whales too. Funk Island, far off the northeast coast, is home to a big gannet colony.
 
-Later levels give the puffling a little more patience (`hungerSeconds` 27, 28 and 30 for Levels 4 to 6, instead of 25).
+Later levels give the puffling a little more patience (`hungerSeconds` 27, 28, 30 and 30 for Levels 4 to 7, instead of 25).
 
-Each level has its own scenery: clear skies and rolling hills (Capelin Scull), overcast with a seabird island (Gull Island), a storm with a lighthouse (Baccalieu Tickle), towering cliffs and Bird Rock white with gannets (Cape St. Mary's), pale fog with bergs on the horizon (Iceberg Alley), and summer hills with an outport of jellybean houses (Trinity Bay).
+Each level has its own scenery: clear skies and rolling hills (Capelin Scull), overcast with a seabird island (Gull Island), a storm with a lighthouse (Baccalieu Tickle), towering cliffs and Bird Rock white with gannets (Cape St. Mary's), pale fog with bergs on the horizon (Iceberg Alley), summer hills with an outport of jellybean houses (Trinity Bay), and open ocean with a low granite island white with seabirds (Funk Island).
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
 
@@ -46,6 +47,7 @@ src/hunters.js    great black-backed gulls that hunt the puffin (Gull Island)
 src/whales.js     humpback whales that lunge up through a bubble ring (Trinity Bay)
 src/jaegers.js    jaegers that chase a puffin carrying fish and steal it (Cape St. Mary's, Iceberg Alley)
 src/icebergs.js   icebergs, mostly underwater, that knock your catch loose (Iceberg Alley)
+src/gannets.js    gannets that plunge-dive from above and knock your catch loose (Funk Island)
 src/finale.js     end-of-level zoom and crash landing at the home colony
 src/tutorial.js   the guided How to play run
 src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edit the lines here)

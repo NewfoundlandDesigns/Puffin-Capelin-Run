@@ -27,11 +27,11 @@ function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
     hunger: 0.7, lowBeep: 0, feedQ: [], tGulp: 0, gulpN: 0, full: 0, starving: 0, fedFish: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
     p: { x: 200, y: SEA - 6, vy: 0, flap: 0, inv: 0, breath: 1, gasp: false, wasUnder: false },
     beak: [], score: 0, deliveries: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
-    fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], bergs: [], cliffs: [], parts: [], pops: [],
+    fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], gannets: [], bergs: [], cliffs: [], parts: [], pops: [],
     tFish: 0.5, tGull: 3, tCliff: 5.5, tGold: rand(9, 14),
     tSeal: level.seals ? level.seals.first : Infinity, tHunt: level.hunters ? level.hunters.first : Infinity,
     tWhale: level.whales ? level.whales.first : Infinity, tJaeger: level.jaegers ? level.jaegers.first : Infinity,
-    tBerg: level.bergs ? level.bergs.first : Infinity,
+    tBerg: level.bergs ? level.bergs.first : Infinity, tGannet: level.gannets ? level.gannets.first : Infinity,
     landing: null, caught: null,
     phaseSunset: false, phaseNight: false
   };
@@ -299,6 +299,11 @@ function update(dt) {
   if (s.tJaeger <= 0 && !late) {       // jaegers only bother a puffin that's carrying fish
     if (stackN() < 2 || s.jaegers.length || s.landing) s.tJaeger = 1.2; else { spawnJaeger(); s.tJaeger = rand(...s.level.jaegers.every); }
   }
+  s.tGannet -= wdt;
+  if (s.tGannet <= 0 && !late) {       // one diving at a time, and never onto a landing
+    if (s.gannets.some(g => g.state === 'circle') || s.landing) s.tGannet = 0.8;
+    else { spawnGannet(); s.tGannet = rand(...s.level.gannets.every) - u * 1.5; }
+  }
   s.tBerg -= wdt;
   if (s.tBerg <= 0 && !late) {
     const nearStack = s.cliffs.some(c => c.x + c.w > VW - 200);
@@ -313,7 +318,7 @@ function update(dt) {
     }
   }
 
-  for (const f of s.fish) { f.x += f.vx * wdt; f.y += Math.cos(s.t * (f.amp > 20 ? 2 : 3) + f.ph) * f.amp * wdt; f.y = clamp(f.y, SEA + 20, 580); }
+  for (const f of s.fish) { f.x += f.vx * wdt; f.y += Math.cos(s.t * (f.amp > 20 ? 2 : 3) + f.ph) * f.amp * wdt; if (f.dy) { f.y += f.dy * wdt; f.dy *= Math.pow(0.04, wdt); } f.y = clamp(f.y, SEA + 20, 580); }
   for (const g of s.gulls) { g.x += g.vx * wdt; g.y += Math.sin(s.t * 2 + g.ph) * 20 * wdt; }
   for (const c of s.cliffs) {
     c.x -= scroll * wdt;
@@ -354,6 +359,7 @@ function update(dt) {
   updateHunters(wdt);
   updateWhales(wdt, scroll);
   updateJaegers(wdt);
+  updateGannets(wdt, scroll);
   updateBergs(wdt, scroll);
   if (s.caught) return;
 
@@ -480,6 +486,7 @@ function buildPreview(i) {
   if (threats.includes('seal')) s.seals.push({ x: vw * 0.82, y: SEA + 100, vx: 0, vy: 0, ph: 0, barked: true });
   if (threats.includes('whale')) s.whales.push({ x: vw * (threats[0] === 'whale' ? 0.8 : 0.9), state: 'hang', t: 99, rise: threats[0] === 'whale' ? 1 : 0.75, open: 1, topY: 0, ph: 0, ate: 3 });
   if (threats.includes('jaeger')) s.jaegers.push({ x: vw * 0.12, y: 110, vx: 200, vy: 20, state: 'chase', t: 99, waited: 0, ph: 0 });
+  if (threats.includes('gannet')) s.gannets.push({ x: vw * 0.76, y: SEA - 60, state: 'dive', t: 0, d: 0.3, ph: 0, splashed: true, ate: 0 });
   if (threats.includes('berg')) { const sv = st; st = s; spawnBerg(); st = sv; const b = s.bergs[0]; b.x = vw * 0.66; }
   for (const w of s.whales) w.topY = whaleTop(w.rise);
   return s;

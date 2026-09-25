@@ -71,5 +71,18 @@ const LEVELS = [
     whales: { first: 10, every: [14, 19] },
     threats: ['whale', 'seal'],
     hungerSeconds: 30
+  },
+  {
+    id: 'funk-island',
+    name: 'Funk Island',
+    scene: 'funk',
+    blurb: 'Gannets drop like spears from high above. When a shadow slides toward you, change depth or dive below it. A few whales too.',
+    gullEvery: [2.4, 4],
+    seals: null,
+    hunters: null,
+    gannets: { first: 8, every: [4.5, 7] },
+    whales: { first: 35, every: [24, 32] },
+    threats: ['gannet', 'whale'],
+    hungerSeconds: 30
   }
 ];

@@ -40,7 +40,7 @@ Object.assign(globalThis, {
   requestAnimationFrame: cb => { raf = cb; },
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 }
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, deliver, LEVELS };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS };');
 const T = globalThis.__T;
 const SEA = 270;
 
@@ -109,6 +109,33 @@ function whaleTrial(y) {
 }
 check('whale swallows a puffin in the ring', whaleTrial(SEA + 30) === 'Swallowed by a whale');
 check('diving deep passes under the whale', whaleTrial(SEA + 220) === 'survived');
+
+// 3b. Gannets: aimed at the puffin, a hit knocks the catch loose; far enough below, it can't reach
+const gannetIdx = T.LEVELS.findIndex(l => l.gannets);
+function gannetTrial(y) {
+  T.start(gannetIdx); quiet(T.st); T.st.tGannet = 999; T.st.fish = []; T.st.tFish = 999;
+  T.st.p.inv = 0; T.st.p.y = y; T.st.beak = [false, false, false];
+  frame();                                              // puffin settles at its usual x
+  T.st.p.y = y; T.spawnGannet();
+  for (let f = 0; f < 60 * 4 && T.st.gannets.length; f++) {
+    T.st.p.y = y; T.st.p.vy = 0; T.st.p.breath = 1;
+    if (T.st.beak.length < 3) return 'hit';
+    frame();
+  }
+  return T.st.beak.length < 3 ? 'hit' : 'safe';
+}
+const trials = n => Array.from({ length: n }, (_, i) => i);
+check('gannet hits a puffin in the air', trials(5).every(() => gannetTrial(SEA - 70) === 'hit'));
+check('gannet hits a puffin underwater', trials(5).every(() => gannetTrial(SEA + 60) === 'hit'));
+check('diving below the gannet is safe', trials(5).every(() => gannetTrial(SEA + 230) === 'safe'));
+{
+  T.start(gannetIdx); quiet(T.st); T.st.tGannet = 999; T.st.tFish = 999; T.st.p.inv = 99;
+  T.st.fish = [];
+  for (let k = 0; k < 6; k++) T.st.fish.push({ x: 700 + k * 12, y: SEA + 60, vx: -T.st.speed, ph: 0, amp: 0, gold: false });
+  T.st.gannets.push({ x: 700, y: 36, state: 'dive', t: 0, d: 0, ph: 0, splashed: false, ate: 0 });
+  for (let f = 0; f < 60; f++) frame();
+  check('a gannet plunge eats or scatters the school', T.st.fish.length < 6 && T.st.fish.some(x => Math.abs(x.y - (SEA + 60)) > 15));
+}
 
 // 4. The tutorial can be completed by following the cards
 els.howBtn.onclick();

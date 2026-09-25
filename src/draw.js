@@ -532,6 +532,34 @@ function drawBirdRock(off, cols, t, night) {
   }
 }
 
+// Funk Island: a low, flat granite island far offshore, white with nesting seabirds, gannets overhead
+function drawFunkIsland(off, cols, t, night) {
+  const period = 1600;
+  const first = Math.floor((off - 400) / period);
+  for (let n = first; n <= first + Math.ceil(VW / period) + 1; n++) {
+    const x0 = n * period - off + 200;
+    if (x0 > VW + 40 || x0 + 380 < -40) continue;
+    ctx.fillStyle = css(cols[0]);
+    ctx.beginPath(); ctx.moveTo(x0, SEA + 2); ctx.lineTo(x0 + 18, SEA - 20); ctx.quadraticCurveTo(x0 + 120, SEA - 34, x0 + 250, SEA - 30);
+    ctx.quadraticCurveTo(x0 + 330, SEA - 26, x0 + 350, SEA - 12); ctx.lineTo(x0 + 370, SEA + 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = `rgba(245,248,250,${0.8 - night * 0.6})`;          // the colony: birds packed on the rock
+    for (let i = 0; i < 90; i++) {
+      const bx = x0 + 26 + ((i * 41) % 310), top = SEA - 26 - 6 * Math.sin((bx - x0) / 370 * Math.PI);
+      ell(bx, top + ((i * 17) % 12), 1.2, 0.9);
+    }
+    if (night < 0.9) {                                   // gannets wheeling over it
+      for (let i = 0; i < 14; i++) {
+        const a = t * (0.35 + (i % 4) * 0.08) + i * 1.9;
+        const gx = x0 + 180 + Math.cos(a) * (60 + (i * 31) % 150), gy = SEA - 70 + Math.sin(a * 1.3 + i) * 30;
+        const f = Math.sin(t * 4 + i) * 1.4;
+        ctx.strokeStyle = `rgba(250,250,250,${0.9 * (1 - night)})`; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(gx - 7, gy - f); ctx.lineTo(gx, gy); ctx.lineTo(gx + 7, gy - f); ctx.stroke();
+        ctx.fillStyle = `rgba(20,24,30,${0.9 * (1 - night)})`; ell(gx - 7, gy - f, 1, 1); ell(gx + 7, gy - f, 1, 1);
+      }
+    }
+  }
+}
+
 // Icebergs far off on the horizon
 function drawFarBergs(off, cols) {
   const period = 900;
@@ -618,6 +646,8 @@ function draw() {
     drawBirdRock(s.dist * 0.05, pal.hills, t, night);
     if (scene.fog) drawFog(pal.cloud, night);
     hills(s.dist * 0.15 + 900, css(pal.hills[1]), 12, 0.02, SEA + 1);
+  } else if (scene.far === 'funk') {
+    drawFunkIsland(s.dist * 0.04, pal.hills, t, night);
   } else if (scene.far === 'bergs') {
     drawFarBergs(s.dist * 0.04, pal.hills);
     if (scene.fog) drawFog(pal.cloud, night);
@@ -677,6 +707,7 @@ function draw() {
   for (const gl of s.gulls) drawGull(gl, t);
   for (const h of s.hunters) drawHunter(h, t);
   for (const j of s.jaegers) drawJaeger(j, t);
+  for (const g of s.gannets) drawGannet(g, t);
 
   // puffin, with a soft moonlit halo at night so it stays visible
   const under = p.y > SEA + 6;
