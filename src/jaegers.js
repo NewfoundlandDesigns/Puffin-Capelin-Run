@@ -40,7 +40,7 @@ function steal(j) {
   st.beak = [];
   j.state = 'leave'; j.carry = true;
   Snd.jaegerSteal();
-  pop('A jaeger stole your catch', p.x + 20, p.y - 40, '#ffffff', 16);
+  pop(t('pop.jaeger'), p.x + 20, p.y - 40, '#ffffff', 16);
 }
 
 function drawJaeger(j, t) {

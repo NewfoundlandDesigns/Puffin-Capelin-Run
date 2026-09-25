@@ -33,8 +33,8 @@ function updateBergs(wdt, scroll) {
       p.vy = p.y < SEA ? -260 : 220;
       Snd.bergBump();
       burst(p.x + 10, p.y, 10, 'rgba(235,245,252,0.9)', 120, 200, 1.2, 2.5, 0.5);
-      if (stackN() > 0) loseStack('Bumped an iceberg');
-      else pop('Bonk', p.x + 20, p.y - 40);
+      if (stackN() > 0) loseStack(t('pop.berg'));
+      else pop(t('pop.bonk'), p.x + 20, p.y - 40);
     }
   }
   s.bergs = s.bergs.filter(b => b.x + b.w > -40);

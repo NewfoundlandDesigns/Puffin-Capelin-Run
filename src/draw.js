@@ -335,10 +335,11 @@ function drawDropNote(c) {
   const bx = c.x + c.w * BURROW, by = c.top + 16;
 
   const title = '+' + nt.pts;
-  const caption = nt.gold ? `${nt.n} capelin, golden ×${nt.mult}` : `${nt.n} capelin`;
+  const caption = nt.gold ? t('note.golden', { n: nt.n, m: nt.mult }) : t('note.capelin', { n: nt.n });
   ctx.font = `800 24px ${FONT}`; const w1 = ctx.measureText(title).width;
   ctx.font = `500 12px ${FONT}`; const w2 = ctx.measureText(caption).width;
-  const cw = Math.max(w1, w2, nt.beak.length * 7, 96) + 24;
+  ctx.font = `700 12px ${FONT}`; const w3 = nt.bestYet ? ctx.measureText(t('note.best')).width : 0;
+  const cw = Math.max(w1, w2, w3, nt.beak.length * 7, 96) + 24;
   const ch = nt.bestYet ? 82 : 66;
   // up and to the right of the burrow, clear of the puffin standing on its left
   const cx = clamp(bx + 26, 6, VW - cw - 6);
@@ -375,7 +376,7 @@ function drawDropNote(c) {
   ctx.fillText(caption, cx + 12, cy + 60);
   if (nt.bestYet) {
     ctx.font = `700 12px ${FONT}`; ctx.fillStyle = '#feb445';
-    ctx.fillText('Biggest drop yet', cx + 12, cy + 75);
+    ctx.fillText(t('note.best'), cx + 12, cy + 75);
   }
   ctx.restore();
 }

@@ -1,3 +1,8 @@
+/* DM Sans, bundled (assets/fonts, SIL Open Font License): one variable file covers every weight used */
+@font-face{
+  font-family:"DM Sans";font-style:normal;font-weight:100 1000;font-display:swap;
+  src:url("../assets/fonts/dm-sans-latin.woff2") format("woff2");
+}
 :root{
   --navy:#10233d; --orange:#f94a18; --orange-strong:#d64015; --amber:#feb445; --alert:#dc362c;
   --bg:#0a1626;
@@ -81,6 +86,7 @@ body{
 .panel[hidden]{display:none}
 .panel h1,.panel h2{margin:0 0 10px;font-weight:800;line-height:0.95;font-size:clamp(2.4rem,9vw,3.3rem);letter-spacing:-0.045em}
 .panel p{margin:0 0 10px;font-size:1rem;line-height:1.45;max-width:36ch}
+.panel .subtitle{margin:-4px 0 12px;font-size:0.95rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--orange-strong)}
 .panel .lede{font-size:1.15rem;font-weight:700;letter-spacing:-0.01em}
 .panel .small{font-size:0.9rem;color:var(--card-muted)}
 .panel .big{font-size:3.2rem;font-weight:800;letter-spacing:-0.045em;line-height:1;margin:4px 0 8px;font-variant-numeric:tabular-nums}
@@ -254,3 +260,11 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .unlock-text strong{font-size:1.05rem}
 .unlock-more{font-size:0.82rem;color:var(--card-muted)}
 .panel .wear{padding:8px 16px;font-size:0.9rem}
+
+/* ---------- language switch ---------- */
+.lang{display:flex;justify-content:flex-end;gap:4px;margin:-10px -6px 6px 0}
+.lang button{
+  font:inherit;font-size:0.8rem;font-weight:700;padding:4px 10px;border-radius:999px;cursor:pointer;
+  background:transparent;color:var(--card-muted);border:1.5px solid transparent;
+}
+.lang button[aria-pressed="true"]{color:var(--card-ink);border-color:currentColor}

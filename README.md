@@ -1,4 +1,4 @@
-# Fun Puffin
+# Beakful: A Puffin Game
 
 A small one-button game about an Atlantic puffin feeding its puffling off the Newfoundland coast, from morning until nightfall.
 
@@ -21,6 +21,12 @@ Later levels give the puffling a little more patience (`hungerSeconds` 27, 28, 3
 Each level has its own scenery: clear skies and rolling hills (Capelin Scull), overcast with a seabird island (Gull Island), a storm with a lighthouse (Baccalieu Tickle), towering cliffs and Bird Rock white with gannets (Cape St. Mary's), pale fog with bergs on the horizon (Iceberg Alley), summer hills with an outport of jellybean houses (Trinity Bay), and open ocean with a low granite island white with seabirds (Funk Island).
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
+
+## Languages
+
+Beakful is in English and French (Canadian French, in the familiar "tu"). It picks French for browsers set to French, and a switch on the title screen changes it; the choice is remembered.
+
+All player-facing text goes through `src/i18n.js`: interface text in `TEXT` (looked up with `t('key')`), and the French for levels, tutorial cards, outfits and the puffling's lines in `DATA`. English for game data stays with the data itself. Level names that are real places mostly keep their English names in French (Gull Island, Baccalieu Tickle, Cap St. Mary's), except where there's an established French name (Baie de la Trinité). To add a language, add it to `LANGS`, `TEXT` and `DATA`; the smoke test checks nothing is missing.
 
 ## Outfits
 
@@ -61,6 +67,7 @@ Controls: hold the mouse button, a finger, or the space bar to dive. `M` toggles
 ```
 index.html        page markup; loads the files below in order
 src/style.css     layout, HUD and panels
+src/i18n.js       languages: English and French text, and the language switch
 src/util.js       shared constants (run length, sea level, stack size) and helpers
 src/levels.js     level names and hazard settings
 src/audio.js      all sound, synthesized with the Web Audio API (no audio files)
@@ -79,6 +86,8 @@ src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edi
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
 tools/smoke-test.mjs  plays through every level, the tutorial and key failure cases headlessly
+tools/make-art.mjs    renders the phone icons and share image into assets/
+assets/           icon, share image, and the bundled DM Sans font
 ```
 
 The scripts are plain classic scripts that share globals, loaded in order, so the game runs straight from the file system.
@@ -87,13 +96,19 @@ Testing mode: open the game with `?dev` on the end of the address (`index.html?d
 
 Pause: the pause button (bottom right), P or Esc. The game also pauses by itself when the tab is hidden or the window loses focus.
 
+## Page, icons and font
+
+`index.html` has a description, a favicon (`assets/icon.svg`), phone home-screen icons, a web app manifest (`manifest.webmanifest`) and a share image (`assets/share.png`) for link previews. `node tools/make-art.mjs` re-renders the PNG icons and share image. Once the game has a public address, make the `og:image` URL absolute.
+
+DM Sans is bundled in `assets/fonts` (SIL Open Font License, see `OFL.txt`), so the game makes no outside requests.
+
 ## Single-file build
 
 ```
 node tools/build.mjs
 ```
 
-Writes `dist/fun-puffin.html`, with all CSS and JS inlined. Handy for sharing or hosting as one file.
+Writes `dist/beakful.html`, with all CSS and JS, the font and the favicon inlined. Handy for sharing or hosting as one file.
 
 ## Testing
 
@@ -121,4 +136,4 @@ Most of the feel lives in a few places:
 
 ---
 
-Made in Newfoundland.
+Made in Newfoundland by Fun Puffin.

@@ -95,8 +95,8 @@ function gannetHit(g) {
   p.inv = 1.2; p.vy = Math.max(p.vy, 320);
   burst(p.x, p.y, 12, 'rgba(250,250,250,0.9)', 150, 200, 1.5, 3, 0.6);
   Snd.gannetHit();
-  if (stackN() > 0) loseStack('A gannet knocked your catch loose');
-  else pop('Whoa!', p.x + 20, p.y - 40);
+  if (stackN() > 0) loseStack(t('pop.gannet'));
+  else pop(t('pop.whoa'), p.x + 20, p.y - 40);
 }
 
 // White body, black wingtips, a buff-yellow head and a long pale bill

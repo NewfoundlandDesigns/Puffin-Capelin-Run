@@ -1,15 +1,17 @@
-# Fun Puffin: notes for Claude
+# Beakful: notes for Claude
 
 A one-button browser game: an Atlantic puffin feeds its puffling off the Newfoundland coast,
 from morning to nightfall. Hold to dive, let go to rise. Built as a fun side project by
-Mark (NewfoundlandDesigns), who shares the "Fun Puffin" name with his consulting brand.
+Mark (NewfoundlandDesigns). The game is called "Beakful: A Puffin Game" (it was "Fun Puffin"
+until launch prep; Mark's consulting brand is Fun Puffin, credited as "Made in Newfoundland by
+Fun Puffin"). The repo keeps the name Puffin-Capelin-Run.
 
 Repo: https://github.com/NewfoundlandDesigns/Puffin-Capelin-Run (branch `main`).
 
 ## Run, build, test
 
 - Play: open `index.html` directly in a browser. No server, no install, no build step.
-- Single-file build: `node tools/build.mjs` writes `dist/fun-puffin.html` (CSS and JS inlined).
+- Single-file build: `node tools/build.mjs` writes `dist/beakful.html` (CSS and JS inlined).
   `dist/` is gitignored.
 - Smoke test: `node tools/smoke-test.mjs`. Builds, then plays through every level to the
   finale, hunger failure, whale catch/escape, and the tutorial, headlessly. Run it after
@@ -27,6 +29,8 @@ Plain classic scripts (not modules) sharing globals, loaded in this order by `in
 ```
 util.js      constants (WORLD_H 600, SEA 270, LEVEL_DIST, MAX_STACK, AIR_SECONDS,
              FEED_PER_FISH, DEV/UNLOCK_ALL), rand/clamp, localStorage wrapper
+i18n.js      languages (en, fr): TEXT for interface text via t('key', vars), DATA for the
+             French of levels/tutorial/outfits/slots/chatter; lvName(), outName() etc.
 levels.js    LEVELS: name, scene, hazard timings, threats (for the preview), hungerSeconds
 audio.js     Snd: all sound synthesized with Web Audio (no audio files)
 palette.js   SCENES: per-level day-to-night colour keyframes and scenery flags
@@ -57,6 +61,12 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Languages: never hard-code player-facing text. Use t('key') (add the key to TEXT.en and
+  TEXT.fr) or the data helpers (lvName, lvBlurb, outName, outUnlock, slotName, slotLabel,
+  tutStepText, lines). Static HTML uses data-i18n / data-i18n-aria. French is Canadian French
+  with "tu": no space before ! ? ;, a no-break space before : and %, and 0 and 1 are singular
+  (pluralFr). Keep English text in the data files; French goes in DATA.fr. The smoke test
+  checks every key and data item has French, with matching {placeholders}.
 - Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
   (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
   as it dives away (`drawFluke`, harmless).
@@ -92,8 +102,11 @@ Key ideas:
 - Brand palette: navy `#10233d`, beak orange `#f94a18` (navy text on it, not white),
   orange-strong `#d64015` for buttons with white text, amber `#feb445` for celebration,
   alert `#dc362c`, shell `#edf1f6` (the puffin's belly). Font: DM Sans.
-- Everything is drawn in code. No image or audio files. No external requests except the
-  Google Fonts stylesheet.
+- Everything in the game is drawn in code. No image or audio files in play. No external
+  requests at all: DM Sans is bundled (assets/fonts, SIL OFL, one variable woff2 for every
+  weight). The only image files are for the page itself: assets/icon.svg (favicon), phone
+  icons and the share image, rendered by `tools/make-art.mjs` (rerun after art changes).
+  The single-file build inlines the font and favicon.
 - Respect `prefers-reduced-motion` in CSS animations.
 - Tone: warm and funny, a bit of Newfoundland flavour (see chatter lines, level names).
   Losing should feel gentle.
@@ -143,10 +156,12 @@ Key ideas:
 - The game lives in its own repo (NewfoundlandDesigns/Puffin-Capelin-Run), not on the Fun Puffin
   website.
 - Still to decide or do before launch: where it's hosted (e.g. GitHub Pages from this repo),
-  the player-facing name, a licence, phone playtesting, balance check, favicon/meta/share
-  image, and self-hosting DM Sans (the only outside request).
+  a licence, phone playtesting and a balance check. Once hosted, make og:image in index.html
+  an absolute URL and add og:url.
 - localStorage keys still use the old `capelin-run-*` prefix on purpose, so existing best
-  scores and unlocks survived the rename to Fun Puffin. Don't rename them without a migration.
+  scores and unlocks survived the renames (Capelin Run, then Fun Puffin, then Beakful). The
+  tutorial key is still `fun-puffin-tutorial-done` for the same reason. Don't rename them
+  without a migration.
 - Commits so far use the author `NewfoundlandDesigns <NewfoundlandDesigns@users.noreply.github.com>`.
   If Mark wants his own name on them, amend before the first push.
 
