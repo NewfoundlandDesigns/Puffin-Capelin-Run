@@ -94,8 +94,11 @@ Key ideas:
 - Brand palette: navy `#10233d`, beak orange `#f94a18` (navy text on it, not white),
   orange-strong `#d64015` for buttons with white text, amber `#feb445` for celebration,
   alert `#dc362c`, shell `#edf1f6` (the puffin's belly). Font: DM Sans.
-- Everything is drawn in code. No image or audio files. No external requests except the
-  Google Fonts stylesheet.
+- Everything in the game is drawn in code. No image or audio files in play. No external
+  requests at all: DM Sans is bundled (assets/fonts, SIL OFL, one variable woff2 for every
+  weight). The only image files are for the page itself: assets/icon.svg (favicon), phone
+  icons and the share image, rendered by `tools/make-art.mjs` (rerun after art changes).
+  The single-file build inlines the font and favicon.
 - Respect `prefers-reduced-motion` in CSS animations.
 - Tone: warm and funny, a bit of Newfoundland flavour (see chatter lines, level names).
   Losing should feel gentle.
@@ -145,8 +148,8 @@ Key ideas:
 - The game lives in its own repo (NewfoundlandDesigns/Puffin-Capelin-Run), not on the Fun Puffin
   website.
 - Still to decide or do before launch: where it's hosted (e.g. GitHub Pages from this repo),
-  a licence, phone playtesting, balance check, favicon/meta/share
-  image, and self-hosting DM Sans (the only outside request).
+  a licence, phone playtesting and a balance check. Once hosted, make og:image in index.html
+  an absolute URL and add og:url.
 - localStorage keys still use the old `capelin-run-*` prefix on purpose, so existing best
   scores and unlocks survived the renames (Capelin Run, then Fun Puffin, then Beakful). The
   tutorial key is still `fun-puffin-tutorial-done` for the same reason. Don't rename them

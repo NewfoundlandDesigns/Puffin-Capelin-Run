@@ -79,6 +79,8 @@ src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edi
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
 tools/smoke-test.mjs  plays through every level, the tutorial and key failure cases headlessly
+tools/make-art.mjs    renders the phone icons and share image into assets/
+assets/           icon, share image, and the bundled DM Sans font
 ```
 
 The scripts are plain classic scripts that share globals, loaded in order, so the game runs straight from the file system.
@@ -87,13 +89,19 @@ Testing mode: open the game with `?dev` on the end of the address (`index.html?d
 
 Pause: the pause button (bottom right), P or Esc. The game also pauses by itself when the tab is hidden or the window loses focus.
 
+## Page, icons and font
+
+`index.html` has a description, a favicon (`assets/icon.svg`), phone home-screen icons, a web app manifest (`manifest.webmanifest`) and a share image (`assets/share.png`) for link previews. `node tools/make-art.mjs` re-renders the PNG icons and share image. Once the game has a public address, make the `og:image` URL absolute.
+
+DM Sans is bundled in `assets/fonts` (SIL Open Font License, see `OFL.txt`), so the game makes no outside requests.
+
 ## Single-file build
 
 ```
 node tools/build.mjs
 ```
 
-Writes `dist/beakful.html`, with all CSS and JS inlined. Handy for sharing or hosting as one file.
+Writes `dist/beakful.html`, with all CSS and JS, the font and the favicon inlined. Handy for sharing or hosting as one file.
 
 ## Testing
 

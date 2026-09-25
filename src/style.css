@@ -1,3 +1,8 @@
+/* DM Sans, bundled (assets/fonts, SIL Open Font License): one variable file covers every weight used */
+@font-face{
+  font-family:"DM Sans";font-style:normal;font-weight:100 1000;font-display:swap;
+  src:url("../assets/fonts/dm-sans-latin.woff2") format("woff2");
+}
 :root{
   --navy:#10233d; --orange:#f94a18; --orange-strong:#d64015; --amber:#feb445; --alert:#dc362c;
   --bg:#0a1626;
