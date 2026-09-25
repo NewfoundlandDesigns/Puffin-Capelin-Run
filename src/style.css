@@ -260,3 +260,11 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .unlock-text strong{font-size:1.05rem}
 .unlock-more{font-size:0.82rem;color:var(--card-muted)}
 .panel .wear{padding:8px 16px;font-size:0.9rem}
+
+/* ---------- language switch ---------- */
+.lang{display:flex;justify-content:flex-end;gap:4px;margin:-10px -6px 6px 0}
+.lang button{
+  font:inherit;font-size:0.8rem;font-weight:700;padding:4px 10px;border-radius:999px;cursor:pointer;
+  background:transparent;color:var(--card-muted);border:1.5px solid transparent;
+}
+.lang button[aria-pressed="true"]{color:var(--card-ink);border-color:currentColor}

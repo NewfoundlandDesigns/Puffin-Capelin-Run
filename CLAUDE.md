@@ -29,6 +29,8 @@ Plain classic scripts (not modules) sharing globals, loaded in this order by `in
 ```
 util.js      constants (WORLD_H 600, SEA 270, LEVEL_DIST, MAX_STACK, AIR_SECONDS,
              FEED_PER_FISH, DEV/UNLOCK_ALL), rand/clamp, localStorage wrapper
+i18n.js      languages (en, fr): TEXT for interface text via t('key', vars), DATA for the
+             French of levels/tutorial/outfits/slots/chatter; lvName(), outName() etc.
 levels.js    LEVELS: name, scene, hazard timings, threats (for the preview), hungerSeconds
 audio.js     Snd: all sound synthesized with Web Audio (no audio files)
 palette.js   SCENES: per-level day-to-night colour keyframes and scenery flags
@@ -59,6 +61,12 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Languages: never hard-code player-facing text. Use t('key') (add the key to TEXT.en and
+  TEXT.fr) or the data helpers (lvName, lvBlurb, outName, outUnlock, slotName, slotLabel,
+  tutStepText, lines). Static HTML uses data-i18n / data-i18n-aria. French is Canadian French
+  with "tu": no space before ! ? ;, a no-break space before : and %, and 0 and 1 are singular
+  (pluralFr). Keep English text in the data files; French goes in DATA.fr. The smoke test
+  checks every key and data item has French, with matching {placeholders}.
 - Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
   (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
   as it dives away (`drawFluke`, harmless).

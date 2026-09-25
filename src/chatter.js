@@ -43,19 +43,19 @@ function updateChatter(dt) {
   const s = st, c = s.chat, p = s.p;
   // puffling
   if (c.sayHide > 0) { c.sayHide -= dt; if (c.sayHide <= 0) hideSay(); }
-  if (s.hunger < 0.5 && !c.peckish && s.hunger >= 0.2) { c.peckish = true; sayPuffling(PECKISH_LINE, 2.2); }
+  if (s.hunger < 0.5 && !c.peckish && s.hunger >= 0.2) { c.peckish = true; sayPuffling(t('say.peckish'), 2.2); }
   if (s.hunger > 0.6) c.peckish = false;
   if (s.hunger < 0.2) {
     c.nextNag -= dt;
     if (c.nextNag <= 0) {
       const wail = s.starving > 0;
-      c.last = pickLine(wail ? LAST_CHANCE_LINES : HUNGRY_LINES, c.last); sayPuffling(c.last, wail ? 1.6 : 2.6);
+      c.last = pickLine(wail ? lines('lastChance', LAST_CHANCE_LINES) : lines('hungry', HUNGRY_LINES), c.last); sayPuffling(c.last, wail ? 1.6 : 2.6);
       c.nextNag = wail ? 1.8 : 3.4;
     }
   } else c.nextNag = 0.4;
   // puffin, underwater with little air left
   const under = p.y > SEA + 6;
-  if (under && p.breath < 0.35 && p.breath > 0 && !c.air) { c.airLast = pickLine(AIR_LINES, c.airLast); c.air = c.airLast; c.airT = 0; }
+  if (under && p.breath < 0.35 && p.breath > 0 && !c.air) { c.airLast = pickLine(lines('air', AIR_LINES), c.airLast); c.air = c.airLast; c.airT = 0; }
   if (c.air) c.airT += dt;
   if ((!under || p.breath <= 0) && c.air) { c.air = null; if (!under) c.phew = 1.1; }
   if (c.phew > 0) c.phew -= dt;
@@ -63,15 +63,15 @@ function updateChatter(dt) {
 
 // Called from deliver(): a thank-you if the puffling was getting hungry, or relief if it was a last-second save
 function chatterFed(before, saved) {
-  if (saved) sayPuffling(pickLine(SAVED_LINES), 2);
-  else if (before < 0.35) sayPuffling(pickLine(FED_LINES), 1.8);
+  if (saved) sayPuffling(pickLine(lines('saved', SAVED_LINES)), 2);
+  else if (before < 0.35) sayPuffling(pickLine(lines('fed', FED_LINES)), 1.8);
 }
 // Called when a delivery overflows into a full belly
-function chatterFull() { sayPuffling(pickLine(FULL_LINES), 1.8); }
+function chatterFull() { sayPuffling(pickLine(lines('full', FULL_LINES)), 1.8); }
 // Called when the meter runs out and the last chance starts
 function chatterLastChance() {
   const c = st.chat;
-  c.last = pickLine(LAST_CHANCE_LINES, c.last); sayPuffling(c.last, 1.6); c.nextNag = 1.8;
+  c.last = pickLine(lines('lastChance', LAST_CHANCE_LINES), c.last); sayPuffling(c.last, 1.6); c.nextNag = 1.8;
 }
 
 /* ---------- the puffin's speech bubble, drawn on the canvas ---------- */
@@ -95,5 +95,5 @@ function drawChatter() {
   const s = st, c = s.chat, p = s.p;
   if (!running || !c || s.caught || s.finale || s.landing) return;
   if (c.air) speechBubble(p.x + 10, p.y - 40, c.air, c.airT);
-  else if (c.phew > 0) speechBubble(p.x + 10, p.y - 34, 'Phew!', 1.1 - c.phew);
+  else if (c.phew > 0) speechBubble(p.x + 10, p.y - 34, t('say.phew'), 1.1 - c.phew);
 }

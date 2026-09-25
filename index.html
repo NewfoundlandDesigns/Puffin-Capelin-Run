@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
-<main id="stage" aria-label="Beakful, a puffin game">
+<main id="stage" aria-label="Beakful, a puffin game" data-i18n-aria="stage">
   <canvas id="game" aria-hidden="true"></canvas>
 
   <div class="hud" id="hud" hidden>
@@ -33,10 +33,10 @@
       </div>
     </div>
     <div class="hud-row">
-      <div class="stat"><span class="k">Score</span><span id="hScore" class="v">0</span></div>
-      <div class="stat mid"><span class="k">In beak</span><span id="hBeak" class="v">0</span></div>
+      <div class="stat"><span class="k" data-i18n="hud.score">Score</span><span id="hScore" class="v">0</span></div>
+      <div class="stat mid"><span class="k" data-i18n="hud.beak">In beak</span><span id="hBeak" class="v">0</span></div>
       <div class="stat right">
-        <span class="k">Puffling</span>
+        <span class="k" data-i18n="hud.puffling">Puffling</span>
         <div class="hunger" id="hunger">
           <svg class="chick" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="8.5" cy="5.5" r="2.4" fill="#8a939f"/><circle cx="12" cy="4.4" r="2.4" fill="#8a939f"/><circle cx="15.5" cy="5.5" r="2.4" fill="#8a939f"/>
@@ -54,7 +54,7 @@
 
   <div class="tut" id="tut" hidden>
     <div class="tut-card" id="tutCard" role="status" aria-live="polite">
-      <div class="tut-top"><span id="tutStep">Step 1</span><button class="tut-skip" id="tutSkip" type="button">Skip tutorial</button></div>
+      <div class="tut-top"><span id="tutStep">Step 1</span><button class="tut-skip" id="tutSkip" type="button" data-i18n="tut.skip">Skip tutorial</button></div>
       <h3 id="tutTitle"></h3>
       <p id="tutText"></p>
       <p class="tut-hint" id="tutHint" hidden></p>
@@ -63,10 +63,13 @@
   </div>
 
   <section class="panel" id="startPanel">
+    <div class="lang" role="group" aria-label="Language" data-i18n-aria="lang">
+      <button type="button" data-lang="en" lang="en">English</button><button type="button" data-lang="fr" lang="fr">Français</button>
+    </div>
     <h1>Beakful</h1>
-    <p class="subtitle">A Puffin Game</p>
-    <p class="lede">Hold to dive. Let go to rise.</p>
-    <p class="small">Your puffling is hungry. Stack capelin in your beak and deliver them to burrows along the way to keep it fed, and make it home by nightfall. Bigger stacks score more; golden capelin count double.</p>
+    <p class="subtitle" data-i18n="start.subtitle">A Puffin Game</p>
+    <p class="lede" data-i18n="start.lede">Hold to dive. Let go to rise.</p>
+    <p class="small" data-i18n="start.intro">Your puffling is hungry. Stack capelin in your beak and deliver them to burrows along the way to keep it fed, and make it home by nightfall. Bigger stacks score more; golden capelin count double.</p>
     <div class="picker">
       <div class="preview" id="preview">
         <canvas id="pvCanvas" aria-hidden="true"></canvas>
@@ -75,27 +78,27 @@
         <span class="pv-lock" id="pvLock" hidden></span>
       </div>
       <p class="pv-blurb" id="pvBlurb"></p>
-      <div class="slider" role="group" aria-label="Choose a level">
-        <button class="nav" id="prevLv" type="button" aria-label="Previous level">
+      <div class="slider" role="group" aria-label="Choose a level" data-i18n-aria="start.chooser">
+        <button class="nav" id="prevLv" type="button" aria-label="Previous level" data-i18n-aria="start.prev">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
         </button>
         <div class="dots" id="lvDots"></div>
-        <button class="nav" id="nextLv" type="button" aria-label="Next level">
+        <button class="nav" id="nextLv" type="button" aria-label="Next level" data-i18n-aria="start.next">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>
         </button>
       </div>
       <button class="primary play" id="playBtn" type="button">Play</button>
       <div class="more">
         <button class="secondary how" id="howBtn" type="button">How to play</button>
-        <button class="secondary how" id="wardBtn" type="button">Wardrobe</button>
+        <button class="secondary how" id="wardBtn" type="button" data-i18n="start.wardrobe">Wardrobe</button>
       </div>
     </div>
-    <p class="keys">Hold with mouse, finger, or space bar. Arrow keys change level. P pauses. M toggles sound.</p>
+    <p class="keys" data-i18n="start.keys">Hold with mouse, finger, or space bar. Arrow keys change level. P pauses. M toggles sound.</p>
   </section>
 
   <section class="panel" id="endPanel" hidden>
     <p class="lvl" id="endLevel"></p>
-    <h2 id="endTitle">Night falls</h2>
+    <h2 id="endTitle" data-i18n="end.nightFalls">Night falls</h2>
     <p class="big" id="endScore">0</p>
     <p id="endStats"></p>
     <p id="endBest" class="small"></p>
@@ -105,33 +108,33 @@
       <button class="secondary wear" id="wearBtn" type="button">Wear it</button>
     </div>
     <div class="actions">
-      <button id="nextBtn" class="primary" type="button" hidden>Next level</button>
+      <button id="nextBtn" class="primary" type="button" hidden data-i18n="end.nextLevel">Next level</button>
       <button id="againBtn" class="primary" type="button">Play again</button>
-      <button id="chooseBtn" class="secondary" type="button">Choose level</button>
+      <button id="chooseBtn" class="secondary" type="button" data-i18n="end.choose">Choose level</button>
     </div>
-    <p class="keys">Made in Newfoundland by Fun Puffin</p>
+    <p class="keys" data-i18n="end.credit">Made in Newfoundland by Fun Puffin</p>
   </section>
 
   <section class="panel ward" id="wardPanel" hidden aria-labelledby="wardTitle">
-    <h2 id="wardTitle">Wardrobe</h2>
+    <h2 id="wardTitle" data-i18n="ward.title">Wardrobe</h2>
     <div class="ward-stage"><canvas id="wardCv" aria-hidden="true"></canvas></div>
     <p class="small ward-note" id="wardNote" role="status" aria-live="polite"></p>
     <div id="wardSlots"></div>
     <div class="ward-tip" id="wardTip" role="tooltip" hidden></div>
-    <button class="primary play" id="wardDone" type="button">Done</button>
+    <button class="primary play" id="wardDone" type="button" data-i18n="ward.done">Done</button>
   </section>
 
   <section class="panel" id="pausePanel" hidden aria-labelledby="pauseTitle">
-    <h2 id="pauseTitle">Paused</h2>
-    <p class="small">Your puffin is treading water till you're back.</p>
+    <h2 id="pauseTitle" data-i18n="pause.title">Paused</h2>
+    <p class="small" data-i18n="pause.text">Your puffin is treading water till you're back.</p>
     <div class="actions">
-      <button class="primary" id="resumeBtn" type="button">Resume</button>
-      <button class="secondary" id="quitBtn" type="button">Choose level</button>
+      <button class="primary" id="resumeBtn" type="button" data-i18n="pause.resume">Resume</button>
+      <button class="secondary" id="quitBtn" type="button" data-i18n="end.choose">Choose level</button>
     </div>
-    <p class="keys">P or Esc pauses and resumes.</p>
+    <p class="keys" data-i18n="pause.keys">P or Esc pauses and resumes.</p>
   </section>
 
-  <button class="pausebtn" id="pauseBtn" type="button" aria-label="Pause" hidden>
+  <button class="pausebtn" id="pauseBtn" type="button" aria-label="Pause" data-i18n-aria="pause.button" hidden>
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
   </button>
   <button class="mute" id="muteBtn" type="button" aria-label="Mute sound" aria-pressed="false">
@@ -141,6 +144,7 @@
 </main>
 
 <script src="src/util.js"></script>
+<script src="src/i18n.js"></script>
 <script src="src/levels.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/palette.js"></script>

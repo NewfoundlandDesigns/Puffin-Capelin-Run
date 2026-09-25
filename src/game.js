@@ -104,7 +104,7 @@ function deliver(c, quiet) {
   st.score += pts; st.deliveries++; st.beak = []; c.used = true;
   const saved = st.starving > 0;
   chatterFed(st.hunger, saved);
-  if (saved) { st.starving = 0; pop('Just in time!', c.x + c.w * BURROW, c.top - 30, '#feb445', 22); }
+  if (saved) { st.starving = 0; pop(t('pop.justInTime'), c.x + c.w * BURROW, c.top - 30, '#feb445', 22); }
   st.fedFish += n + gold; st.fishDelivered += n; if (saved) st.saves++;
   // The puffling gulps the fish down one at a time, starting once they reach the burrow.
   // quiet (the finale) feeds it all at once, since the run is ending.
@@ -149,7 +149,7 @@ function startLastChance() {
   const s = st, p = s.p;
   s.starving = LAST_CHANCE;
   Snd.hungry();
-  pop('Last chance! Get fish to a burrow', p.x + 20, p.y - 40, '#ffffff', 17);
+  pop(t('pop.lastChance'), p.x + 20, p.y - 40, '#ffffff', 17);
   chatterLastChance();
   // make sure a burrow is on its way
   if (!s.cliffs.some(c => !c.used && !c.home && c.x + c.w * BURROW > p.x)) s.tCliff = Math.min(s.tCliff, 0);
@@ -157,24 +157,24 @@ function startLastChance() {
 
 /* ================= CAUGHT ================= */
 // Being caught ends the run: a short beat (sinking for a seal, carried off by a gull), then the end panel.
-const CAUGHT_BY = { seal: 'Caught by a seal', gull: 'Caught by a gull', whale: 'Swallowed by a whale', hungry: 'Puffling too hungry' };
+const caughtBy = reason => t('end.' + reason);           // seal, gull, whale, hungry
 function caught(reason, by) {
   const p = st.p;
   st.caught = { reason, by: reason === 'gull' || reason === 'whale' ? by : null, t: reason === 'whale' ? 1.6 : 1.1, max: 1.1, fromX: p.x, fromY: p.y };
   if (reason === 'hungry') {
     Snd.hungry();
-    pop('Your puffling is too hungry', p.x + 20, p.y - 40, '#ffffff', 17);
+    pop(t('pop.tooHungry'), p.x + 20, p.y - 40, '#ffffff', 17);
     return;
   }
   if (reason === 'whale') {             // no scattered fish: everything goes in the mouth
     st.beak = [];
     by.state = 'swallow';
-    pop('Gulp!', by.x, by.topY - 16, '#ffffff', 24);
+    pop(t('pop.gulp'), by.x, by.topY - 16, '#ffffff', 24);
     return;
   }
   if (reason === 'gull') { Snd.gullHit(); by.carrying = true; by.state = 'carry'; }
   else Snd.sealHit();
-  loseStack(CAUGHT_BY[reason]);
+  loseStack(caughtBy(reason));
   burst(p.x, p.y, 16, 'rgba(220,235,250,0.85)', 140, 0, 1.5, 3, 0.7);
 }
 
@@ -226,8 +226,8 @@ function puffinPhysics(dt) {
     p.breath = Math.max(0, p.breath - dt / AIR_SECONDS);
     if (p.breath === 0 && !p.gasp) {
       p.gasp = true; Snd.air();
-      if (stackN() > 0) loseStack('Out of air. Catch dropped');
-      else pop('Out of air', p.x + 20, p.y - 40);
+      if (stackN() > 0) loseStack(t('pop.noAirDrop'));
+      else pop(t('pop.noAir'), p.x + 20, p.y - 40);
     }
     if (Math.random() < dt * 4) s.parts.push({ x: p.x + 20, y: p.y - 6, vx: -s.speed * 0.3, vy: -40, g: -30, r: 1.8, life: 0.8, max: 0.8, color: 'rgba(220,235,250,0.6)', ring: true });
   } else {
@@ -378,7 +378,7 @@ function update(dt) {
           if (f.gold) {
             s.goldCaught++; Snd.golden();
             burst(f.x, f.y, 14, '#feb445', 120, 0, 1.5, 3, 0.6);
-            pop('Golden capelin', p.x + 20, p.y - 40, '#feb445', 17);
+            pop(t('pop.golden'), p.x + 20, p.y - 40, '#feb445', 17);
           } else {
             Snd.catchFish(stackN());
             burst(f.x, f.y, 5, 'rgba(220,235,250,0.8)', 60, 0, 1, 2, 0.4);
@@ -386,7 +386,7 @@ function update(dt) {
           s.fish.splice(i, 1);
         } else if (!s.fullWarned) {
           s.fullWarned = true; Snd.full();
-          pop('Beak full. Head for a burrow', p.x + 20, p.y - 40, '#feb445', 16);
+          pop(t('pop.beakFull'), p.x + 20, p.y - 40, '#feb445', 16);
         }
       }
     }
@@ -396,8 +396,8 @@ function update(dt) {
     for (const g of s.gulls) {
       if (p.inv <= 0 && Math.hypot(g.x - p.x, g.y - p.y) < 26) {
         p.inv = 1.4; p.vy = Math.max(p.vy, 220); Snd.gullHit();
-        if (stackN() > 0) loseStack('A gull took your catch');
-        else pop('Bonk', p.x + 20, p.y - 40);
+        if (stackN() > 0) loseStack(t('pop.gullTook'));
+        else pop(t('pop.bonk'), p.x + 20, p.y - 40);
       }
     }
 
@@ -416,8 +416,8 @@ function update(dt) {
   s.cliffs = s.cliffs.filter(c => c.x + c.w > -40 || c === (s.landing && s.landing.c));
 
   // time of day moments
-  if (!s.phaseSunset && u >= 0.56) { s.phaseSunset = true; pop('Sunset', VW / 2, 120, '#feb445', 26); Snd.phase(); }
-  if (!s.phaseNight && u >= 0.78) { s.phaseNight = true; pop('Night is coming', VW / 2, 120, '#ffffff', 24); Snd.phase(); }
+  if (!s.phaseSunset && u >= 0.56) { s.phaseSunset = true; pop(t('pop.sunset'), VW / 2, 120, '#feb445', 26); Snd.phase(); }
+  if (!s.phaseNight && u >= 0.78) { s.phaseNight = true; pop(t('pop.night'), VW / 2, 120, '#ffffff', 24); Snd.phase(); }
 
   updateFx(dt);
 }
@@ -442,7 +442,7 @@ function idle(dt) {
 function updateHud() {
   hScore.textContent = st.score;
   const n = stackN(), gold = goldN();
-  hBeak.innerHTML = (n === MAX_STACK ? 'Full' : n) + (gold ? `<span class="mult">×${1 + gold}</span>` : '');
+  hBeak.innerHTML = (n === MAX_STACK ? t('hud.full') : n) + (gold ? `<span class="mult">×${1 + gold}</span>` : '');
   hBeak.classList.toggle('full', n === MAX_STACK);
   const pct = (st.progress * 100).toFixed(2) + '%';
   progFill.style.width = pct; progMark.style.left = pct;
@@ -518,21 +518,21 @@ function drawPreview(dt) {
 
 function renderPicker(dir) {
   const lv = LEVELS[selected], best = bestFor(lv);
-  pvNum.textContent = `Level ${selected + 1} of ${LEVELS.length}`;
-  pvName.textContent = lv.name;
-  pvBlurb.textContent = lv.blurb;
-  pvBest.hidden = !best; pvBest.textContent = best ? `Best ${best.toLocaleString()}` : '';
+  pvNum.textContent = t('picker.level', { n: selected + 1, total: LEVELS.length });
+  pvName.textContent = lvName(lv);
+  pvBlurb.textContent = lvBlurb(lv);
+  pvBest.hidden = !best; pvBest.textContent = best ? t('picker.best', { score: fmtNum(best) }) : '';
   const locked = isLocked(selected);
   preview.classList.toggle('locked', locked);
   pvLock.hidden = !locked;
-  pvLock.textContent = locked ? `Finish ${LEVELS[selected - 1].name} to unlock` : '';
+  pvLock.textContent = locked ? t('picker.lock', { name: lvName(LEVELS[selected - 1]) }) : '';
   playBtn.disabled = locked;
-  playBtn.textContent = locked ? 'Locked' : `Play ${lv.name}`;
+  playBtn.textContent = locked ? t('picker.locked') : t('picker.playLevel', { name: lvName(lv) });
   lvDots.innerHTML = '';
   LEVELS.forEach((l, i) => {
     const d = document.createElement('button');
     d.type = 'button'; d.className = 'dot';
-    d.setAttribute('aria-label', `Level ${i + 1}: ${l.name}`);
+    d.setAttribute('aria-label', t('picker.dot', { n: i + 1, name: lvName(l) }));
     if (i === selected) d.setAttribute('aria-current', 'true');
     d.addEventListener('click', () => selectLevel(i));
     lvDots.appendChild(d);
@@ -560,7 +560,7 @@ function showLevels() {
   st = newState(0.2, selected);
   renderPicker();
   sizePreview();
-  howBtn.textContent = tutorialDone() ? 'How to play' : 'New here? How to play';
+  howBtn.textContent = tutorialDone() ? t('start.how') : t('start.howNew');
   playBtn.focus({ preventScroll: true });
 }
 
@@ -573,8 +573,8 @@ function start(i = currentLevel) {
   running = true; holding = false;
   startPanel.hidden = true; endPanel.hidden = true; hud.hidden = false;
   if (document.activeElement && document.activeElement !== muteBtn) document.activeElement.blur();
-  pop(st.level.name, VW / 2, 170, '#ffffff', 30);
-  pop('Level ' + (i + 1), VW / 2, 136, '#feb445', 15);
+  pop(lvName(st.level), VW / 2, 170, '#ffffff', 30);
+  pop(t('level.start', { n: i + 1 }), VW / 2, 136, '#feb445', 15);
   updateHud();
 }
 function endGame(reason) {
@@ -582,25 +582,25 @@ function endGame(reason) {
   Snd.end(); Snd.setUnder(false);
   const lv = st.level, score = st.score, best = bestFor(lv), isBest = score > best;
   if (isBest) store.set(bestKey(lv), String(score));
-  endLevel.textContent = `Level ${st.levelIdx + 1}: ${lv.name}`;
+  endLevel.textContent = t('end.level', { n: st.levelIdx + 1, name: lvName(lv) });
   const complete = reason === 'complete';
   if (complete && st.levelIdx + 1 < LEVELS.length && isLocked(st.levelIdx + 1)) store.set('capelin-run-unlocked', String(st.levelIdx + 1));
-  endTitle.textContent = complete ? 'Home by nightfall' : CAUGHT_BY[reason];
+  endTitle.textContent = complete ? t('end.home') : caughtBy(reason);
   endScore.hidden = false;
   endScore.textContent = score;
-  againBtn.textContent = 'Play again'; delete againBtn.dataset.tutorial;
+  againBtn.textContent = t('end.again'); delete againBtn.dataset.tutorial;
   const d = st.deliveries;
-  endStats.textContent = (complete ? `Home bonus ${st.bonus}. ` : `Made it ${Math.floor(st.progress * 100)}% of the way. `) +
-    `${d} ${d === 1 ? 'delivery' : 'deliveries'}, biggest stack ${st.biggest}` +
-    (st.goldCaught ? `, ${st.goldCaught} golden capelin.` : '.') +
-    (st.fedFish ? ` Your puffling grew from 40 g to ${40 + st.fedFish * 4} g.` : '');
+  endStats.textContent = (complete ? t('end.bonus', { n: fmtNum(st.bonus) }) : t('end.progress', { pct: Math.floor(st.progress * 100) })) +
+    t('end.deliveries', { n: d, big: st.biggest }) +
+    (st.goldCaught ? t('end.golden', { n: st.goldCaught }) : t('end.period')) +
+    (st.fedFish ? t('end.grew', { w: 40 + st.fedFish * 4 }) : '');
   const next = complete && st.levelIdx + 1 < LEVELS.length ? st.levelIdx + 1 : -1;
   nextBtn.hidden = next < 0;
   nextBtn.dataset.level = next;
-  if (next >= 0) nextBtn.textContent = `Next: ${LEVELS[next].name}`;
+  if (next >= 0) nextBtn.textContent = t('end.next', { name: lvName(LEVELS[next]) });
   againBtn.className = next >= 0 ? 'secondary' : 'primary';
   const fresh = recordRun(st, complete);             // outfits earned this run
-  endBest.innerHTML = isBest && score > 0 ? '<span class="newbest">New best score.</span>' : `Your best: ${Math.max(best, score)}`;
+  endBest.innerHTML = isBest && score > 0 ? `<span class="newbest">${t('end.newBest')}</span>` : t('end.best', { n: fmtNum(Math.max(best, score)) });
   hud.hidden = true; endPanel.hidden = false;
   showUnlocks(fresh);
   const keepParts = st.parts, keepPops = st.pops;
@@ -613,10 +613,10 @@ function showUnlocks(fresh) {
   endUnlock.hidden = !fresh.length;
   if (!fresh.length) return;
   const o = fresh[0];
-  endUnlock.querySelector('.unlock-k').textContent = SLOTS.find(sl => sl.id === o.slot).label;
-  unlockName.textContent = o.name;
-  unlockMore.textContent = fresh.length > 1 ? `And ${fresh.length - 1} more in the Wardrobe.` : o.unlock;
-  wearBtn.dataset.outfit = o.id; wearBtn.textContent = 'Wear it'; wearBtn.disabled = false;
+  endUnlock.querySelector('.unlock-k').textContent = slotLabel(SLOTS.find(sl => sl.id === o.slot));
+  unlockName.textContent = outName(o);
+  unlockMore.textContent = fresh.length > 1 ? t('unlock.more', { n: fresh.length - 1 }) : outUnlock(o);
+  wearBtn.dataset.outfit = o.id; wearBtn.textContent = t('unlock.wear'); wearBtn.disabled = false;
   drawOutfitCard(unlockCv, [o], { focus: o.slot === 'boots' ? 'feet' : o.slot === 'feathers' ? null : 'head' });
   Snd.golden();
 }
@@ -625,7 +625,7 @@ function showUnlocks(fresh) {
 let wardT = 0;
 function openWardrobe() {
   startPanel.hidden = true; wardPanel.hidden = false;
-  wardNote.textContent = 'Wear one of each. Hover or tap a greyed-out one to see how to earn it.';
+  wardNote.textContent = t('ward.intro');
   renderWardrobe();
   wardDone.focus({ preventScroll: true });
 }
@@ -637,35 +637,35 @@ function renderWardrobe(keepFocus) {
   wardSlots.innerHTML = '';
   for (const sl of SLOTS) {
     const box = document.createElement('div'); box.className = 'ward-slot';
-    const h = document.createElement('h3'); h.textContent = sl.name; box.appendChild(h);
+    const h = document.createElement('h3'); h.textContent = slotName(sl); box.appendChild(h);
     const grid = document.createElement('div'); grid.className = 'ward-grid';
-    grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', sl.name);
+    grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', slotName(sl));
     box.appendChild(grid); wardSlots.appendChild(box);          // in the page first, so tiles draw at their real size
     const items = OUTFITS.filter(o => o.slot === sl.id), wornHere = items.find(o => isWorn(o) && outfitOpen(o, stats));
     // "none" first, then each item
     const none = document.createElement('button');
     none.type = 'button'; none.className = 'ward-item none'; none.dataset.key = sl.id + ':none';
-    none.innerHTML = '<span>None</span>';
+    none.innerHTML = `<span>${t('ward.none')}</span>`;
     none.setAttribute('aria-pressed', wornHere ? 'false' : 'true');
-    none.setAttribute('aria-label', `No ${sl.name.toLowerCase()}`);
+    none.setAttribute('aria-label', t('ward.noneLabel', { slot: slotName(sl).toLowerCase() }));
     none.addEventListener('click', () => { takeOff(sl.id); renderWardrobe(none.dataset.key); });
-    tip(none, `No ${sl.name.toLowerCase()}`);
+    tip(none, t('ward.noneLabel', { slot: slotName(sl).toLowerCase() }));
     grid.appendChild(none);
     for (const o of items) {
       const open = outfitOpen(o, stats), worn = o === wornHere;
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'ward-item' + (open ? '' : ' locked'); b.dataset.key = o.id;
       b.setAttribute('aria-pressed', worn ? 'true' : 'false');
-      b.setAttribute('aria-label', open ? o.name : `${o.name}, locked. To earn it: ${o.unlock}`);
+      b.setAttribute('aria-label', open ? outName(o) : t('ward.lockedLabel', { name: outName(o), unlock: outUnlock(o) }));
       const cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true'); b.appendChild(cv);
       if (!open) b.insertAdjacentHTML('beforeend', '<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>');
       b.addEventListener('click', () => {
-        if (!open) { wardNote.textContent = `${o.name}: ${o.unlock}`; showTip(b, `How to earn it: ${o.unlock}`, o.name); return; }
+        if (!open) { wardNote.textContent = t('ward.lockedNote', { name: outName(o), unlock: outUnlock(o) }); showTip(b, t('ward.earn', { unlock: outUnlock(o) }), outName(o)); return; }
         if (worn) takeOff(o.slot); else { wearOutfit(o.id); Snd.init(); Snd.catchFish(3); }
-        wardNote.textContent = worn ? `Took off the ${o.name.toLowerCase()}.` : `Wearing the ${o.name.toLowerCase()}.`;
+        wardNote.textContent = t(worn ? 'ward.tookOff' : 'ward.nowWearing', { name: outName(o) });
         renderWardrobe(b.dataset.key);
       });
-      tip(b, open ? (worn ? 'Wearing it. Tap to take it off.' : 'Tap to wear it.') : `How to earn it: ${o.unlock}`, o.name);
+      tip(b, open ? t(worn ? 'ward.tipWorn' : 'ward.tipWear') : t('ward.earn', { unlock: outUnlock(o) }), outName(o));
       grid.appendChild(b);
       drawOutfitCard(cv, [o], { locked: !open, focus: tileFocus(o.slot) });
     }
@@ -731,7 +731,7 @@ function frame(now) {
 /* ================= INPUT ================= */
 function syncMute() {
   muteBtn.setAttribute('aria-pressed', Snd.muted ? 'true' : 'false');
-  muteBtn.setAttribute('aria-label', Snd.muted ? 'Turn sound on' : 'Mute sound');
+  muteBtn.setAttribute('aria-label', Snd.muted ? t('sound.on') : t('sound.mute'));
 }
 muteBtn.addEventListener('click', () => { Snd.init(); Snd.toggle(); syncMute(); });
 syncMute();
@@ -771,7 +771,7 @@ quitBtn.addEventListener('click', quitRun);
 wardBtn.addEventListener('click', openWardrobe);
 wardDone.addEventListener('click', closeWardrobe);
 wearBtn.addEventListener('click', () => {
-  wearOutfit(wearBtn.dataset.outfit); wearBtn.textContent = 'Wearing it'; wearBtn.disabled = true;
+  wearOutfit(wearBtn.dataset.outfit); wearBtn.textContent = t('unlock.wearing'); wearBtn.disabled = true;
 });
 tutSkip.addEventListener('click', skipTutorial);
 chooseBtn.addEventListener('click', showLevels);
@@ -790,9 +790,18 @@ preview.addEventListener('pointerup', e => {
 preview.addEventListener('pointercancel', () => { swipeX = null; });
 window.addEventListener('resize', () => { resize(); sizePreview(); });
 
+// language switch on the title screen
+for (const b of document.querySelectorAll('[data-lang]')) {
+  b.addEventListener('click', () => {
+    setLang(b.dataset.lang);
+    renderPicker(); syncMute();
+    howBtn.textContent = tutorialDone() ? t('start.how') : t('start.howNew');
+  });
+}
+applyI18n();
 resize();
 st = newState(0.2, selected);
 renderPicker();
-howBtn.textContent = tutorialDone() ? 'How to play' : 'New here? How to play';
+howBtn.textContent = tutorialDone() ? t('start.how') : t('start.howNew');
 sizePreview();
 requestAnimationFrame(frame);

@@ -34,14 +34,15 @@ const mem = {};
 const winHandlers = {};
 let raf = null;
 Object.assign(globalThis, {
-  document: { getElementById: id => els[id] || (els[id] = el(id)), createElement: () => el('b'), addEventListener() {}, activeElement: null },
+  document: { getElementById: id => els[id] || (els[id] = el(id)), createElement: () => el('b'), addEventListener() {}, activeElement: null,
+    querySelectorAll: () => [], documentElement: {}, title: '' },
   HTMLButtonElement: function () {},
   localStorage: { getItem: k => (k in mem ? mem[k] : null), setItem: (k, v) => { mem[k] = String(v); } },
   requestAnimationFrame: cb => { raf = cb; },
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 },
   location: { search: '?dev' }                          // testing mode: every level and outfit open
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds, TEXT, DATA, TUT_STEPS, setLang, t, get LANG() { return LANG; } };');
 const T = globalThis.__T;
 const SEA = 270;
 
@@ -220,8 +221,32 @@ for (let f = 0; f < 60 * 200 && T.running; f++) {
   frame();
 }
 hold(false);
-check('tutorial completes', els.endTitle.textContent === "You're ready", els.endTitle.textContent);
+check('tutorial completes', els.endTitle.textContent === 'You\u2019re ready', els.endTitle.textContent);
 check('finishing the tutorial earns the reading glasses', els.unlockName.textContent.includes('reading glasses'), els.unlockName.textContent);
+
+// 5. French: every English text has a French version, all game data is translated, and a run
+//    played in French shows French
+{
+  const keys = l => Object.keys(T.TEXT[l]).sort().join();
+  check('French has every English text, and no extras', keys('en') === keys('fr'));
+  const holes = v => (typeof v === 'string' ? (v.match(/\{\w+\}/g) || []).sort().join() : 'fn');
+  const bad = Object.keys(T.TEXT.en).filter(k => holes(T.TEXT.en[k]) !== holes(T.TEXT.fr[k]) && typeof T.TEXT.en[k] === typeof T.TEXT.fr[k]);
+  check('French fills in the same names and numbers', bad.length === 0, bad.join(', '));
+  const fr = T.DATA.fr;
+  check('every level is translated', T.LEVELS.every(l => fr.level[l.id] && fr.level[l.id].name && fr.level[l.id].blurb));
+  check('every tutorial card is translated', T.TUT_STEPS.every((st, i) => fr.tutorial[i] && fr.tutorial[i].title && fr.tutorial[i].text && (!st.hint || fr.tutorial[i].hint)));
+  check('every outfit and slot is translated', T.OUTFITS.every(o => fr.outfit[o.id] && fr.outfit[o.id].name && fr.outfit[o.id].unlock) && T.SLOTS.every(sl => fr.slot[sl.id]));
+  T.setLang('fr');
+  T.start(0); T.st.p.inv = 0; quiet(T.st); T.st.tSeal = 0.1;
+  for (let f = 0; f < 60 * 30 && !ended(); f++) { T.st.p.y = SEA + 100; T.st.p.vy = 0; T.st.p.breath = 1; frame(); }
+  const frEnds = ['end.seal', 'end.hungry', 'end.gull', 'end.whale', 'end.home'].map(k => T.TEXT.fr[k]);
+  check('a run in French ends in French', frEnds.includes(els.endTitle.textContent) && els.endLevel.textContent.startsWith('Niveau 1'), els.endTitle.textContent + ' / ' + els.endLevel.textContent);
+  const shown = ['endTitle', 'endLevel', 'endStats', 'endBest', 'pvNum', 'pvName', 'pvBlurb', 'playBtn'].map(id => els[id].textContent);
+  check('no untranslated keys show', shown.every(x => !/^[a-z]+\.[a-zA-Z]+$/.test(x)), shown.join(' | '));
+  check('French numbers use a space for thousands', T.t('picker.best', { score: (12345).toLocaleString('fr-CA') }).includes('12\u00a0345') || T.t('picker.best', { score: (12345).toLocaleString('fr-CA') }).includes('12\u202f345'));
+  T.setLang('en');
+  check('switching back to English', T.t('end.home') === 'Home by nightfall');
+}
 
 const failed = results.filter(r => !r).length;
 console.log(failed ? `\n${failed} failed` : `\nAll ${results.length} passed`);

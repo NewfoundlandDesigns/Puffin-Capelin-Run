@@ -111,8 +111,8 @@ function updateFinale(dt) {
           life: rand(0.9, 1.4), max: 1.4, color: colors[i % colors.length], confetti: true, rot: rand(0, 6) });
       }
       // text is drawn inside the zoom, so it's sized for 2.3x
-      pop('Home!', p.x + 6, p.y - 44, '#ffffff', 13);
-      pop('+' + bonus + ' home bonus', p.x + 6, p.y - 31, '#feb445', 8);
+      pop(t('pop.home'), p.x + 6, p.y - 44, '#ffffff', 13);
+      pop(t('pop.homeBonus', { n: bonus }), p.x + 6, p.y - 31, '#feb445', 8);
     }
   }
 

@@ -54,9 +54,10 @@ function startTutorial() {
 function showTutStep() {
   const T = st.tutorial, step = TUT_STEPS[T.step];
   tut.hidden = false;
-  tutStep.textContent = `Step ${T.step + 1} of ${TUT_STEPS.length}`;
-  tutTitle.textContent = step.title;
-  tutText.textContent = step.text;
+  tutStep.textContent = t('tut.step', { n: T.step + 1, total: TUT_STEPS.length });
+  tutTitle.textContent = tutStepText(T.step, step, 'title');
+  tutText.textContent = tutStepText(T.step, step, 'text');
+  tutHint.textContent = step.hint ? tutStepText(T.step, step, 'hint') : '';
   tutHint.hidden = true;
   tutTimer.parentElement.hidden = !step.read;
   tutTimer.style.width = '0%';
@@ -101,7 +102,7 @@ function updateTutorial(dt) {
   const finished = step.read ? T.t >= step.read : step.done(s, T);
   if (finished) {
     T.cleared += dt;
-    if (T.cleared === dt && !step.read) { pop('Nice!', p.x + 20, p.y - 40, '#feb445', 20); Snd.chirp(); }
+    if (T.cleared === dt && !step.read) { pop(t('tut.nice'), p.x + 20, p.y - 40, '#feb445', 20); Snd.chirp(); }
     if (T.cleared >= (step.read ? 0 : 0.7)) {
       T.step++; T.t = 0; T.cleared = 0;
       if (T.step >= TUT_STEPS.length) { endTutorial(); return; }
@@ -123,13 +124,13 @@ function endTutorial() {
   store.set(TUT_KEY, '1');
   hideTutorial();
   Snd.fanfare(); Snd.setUnder(false);
-  endLevel.textContent = 'How to play';
-  endTitle.textContent = "You're ready";
+  endLevel.textContent = t('tut.doneLevel');
+  endTitle.textContent = t('tut.doneTitle');
   endScore.hidden = true;
-  endStats.textContent = `Start with ${LEVELS[0].name}. Each level adds one new danger, and its preview in the level picker shows you what to expect.`;
+  endStats.textContent = t('tut.doneText', { name: lvName(LEVELS[0]) });
   endBest.textContent = '';
-  nextBtn.hidden = false; nextBtn.dataset.level = 0; nextBtn.textContent = `Play ${LEVELS[0].name}`;
-  againBtn.className = 'secondary'; againBtn.textContent = 'Replay tutorial'; againBtn.dataset.tutorial = '1';
+  nextBtn.hidden = false; nextBtn.dataset.level = 0; nextBtn.textContent = t('picker.playLevel', { name: lvName(LEVELS[0]) });
+  againBtn.className = 'secondary'; againBtn.textContent = t('tut.replay'); againBtn.dataset.tutorial = '1';
   hud.hidden = true; endPanel.hidden = false;
   showUnlocks(recordRun(null, false));              // Nan's reading glasses
   st = newState(0.2, 0);

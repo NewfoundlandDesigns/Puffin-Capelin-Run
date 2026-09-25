@@ -22,6 +22,12 @@ Each level has its own scenery: clear skies and rolling hills (Capelin Scull), o
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
 
+## Languages
+
+Beakful is in English and French (Canadian French, in the familiar "tu"). It picks French for browsers set to French, and a switch on the title screen changes it; the choice is remembered.
+
+All player-facing text goes through `src/i18n.js`: interface text in `TEXT` (looked up with `t('key')`), and the French for levels, tutorial cards, outfits and the puffling's lines in `DATA`. English for game data stays with the data itself. Level names that are real places mostly keep their English names in French (Gull Island, Baccalieu Tickle, Cap St. Mary's), except where there's an established French name (Baie de la Trinité). To add a language, add it to `LANGS`, `TEXT` and `DATA`; the smoke test checks nothing is missing.
+
 ## Outfits
 
 The level picker has a **Wardrobe**: outfits for your puffin, earned by playing. There are five slots and your puffin can wear one of each: a hat, glasses, a scarf or necklace, boots, and feathers. They only change the look, never how the puffin plays. Items you haven't earned are greyed out with a padlock; hover over one (or tap it) to see how to earn it. The end screen announces anything new with a **Wear it** button.
@@ -61,6 +67,7 @@ Controls: hold the mouse button, a finger, or the space bar to dive. `M` toggles
 ```
 index.html        page markup; loads the files below in order
 src/style.css     layout, HUD and panels
+src/i18n.js       languages: English and French text, and the language switch
 src/util.js       shared constants (run length, sea level, stack size) and helpers
 src/levels.js     level names and hazard settings
 src/audio.js      all sound, synthesized with the Web Audio API (no audio files)
