@@ -212,3 +212,28 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 @keyframes sayPop{from{transform:scale(.6) translateY(-6px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion: reduce){.say.pop{animation:none}}
 @media (max-width:520px){.say{max-width:170px;font-size:0.82rem}.say::before{right:96px}}
+
+/* ---------- wardrobe and outfit unlocks ---------- */
+.more{display:flex;gap:10px;margin-top:10px}
+.more .how{flex:1;margin-top:0;padding-left:10px;padding-right:10px}
+.ward-stage{border-radius:16px;overflow:hidden;aspect-ratio:16/10;margin:4px 0 12px}
+.ward-stage canvas{width:100%;height:100%;display:block}
+.panel .ward-name{margin:0 0 2px;font-size:1.2rem;font-weight:800;letter-spacing:-0.01em}
+.panel .ward-note{min-height:1.45em;margin-bottom:12px}
+.ward-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:8px;margin-bottom:16px}
+.ward-item{
+  position:relative;aspect-ratio:1;padding:0;border-radius:14px;cursor:pointer;
+  border:2px solid transparent;background:rgba(68,84,106,0.12);
+}
+.ward-item canvas{width:100%;height:100%;display:block}
+.ward-item[aria-pressed="true"]{border-color:var(--orange-strong);background:rgba(214,64,21,0.1)}
+.ward-item.viewing{box-shadow:0 0 0 2px var(--amber)}
+.ward-item .lock{position:absolute;right:4px;bottom:4px;width:14px;height:14px;color:var(--card-muted)}
+.unlock{display:flex;align-items:center;gap:12px;margin:6px 0 4px;padding:10px 12px;border-radius:16px;background:rgba(254,180,69,0.18)}
+.unlock[hidden]{display:none}
+.unlock canvas{width:56px;height:56px;flex:none}
+.unlock-text{display:flex;flex-direction:column;flex:1;line-height:1.2}
+.unlock-k{font-size:0.8rem;font-weight:700;color:var(--orange-strong);text-transform:uppercase;letter-spacing:0.04em}
+.unlock-text strong{font-size:1.05rem}
+.unlock-more{font-size:0.82rem;color:var(--card-muted)}
+.panel .wear{padding:8px 16px;font-size:0.9rem}

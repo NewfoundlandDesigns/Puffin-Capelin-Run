@@ -13,6 +13,9 @@ const pvNum = $('pvNum'), pvName = $('pvName'), pvBest = $('pvBest'), pvBlurb = 
 const howBtn = $('howBtn'), tut = $('tut'), tutCard = $('tutCard'), tutStep = $('tutStep'), tutTitle = $('tutTitle');
 const tutText = $('tutText'), tutHint = $('tutHint'), tutTimer = $('tutTimer'), tutSkip = $('tutSkip');
 const lvDots = $('lvDots'), prevLv = $('prevLv'), nextLv = $('nextLv'), pvLock = $('pvLock');
+const wardBtn = $('wardBtn'), wardPanel = $('wardPanel'), wardCv = $('wardCv'), wardName = $('wardName'), wardNote = $('wardNote');
+const wardGrid = $('wardGrid'), wardDone = $('wardDone');
+const endUnlock = $('endUnlock'), unlockCv = $('unlockCv'), unlockName = $('unlockName'), unlockMore = $('unlockMore'), wearBtn = $('wearBtn');
 const endLevel = $('endLevel'), endTitle = $('endTitle'), endScore = $('endScore'), endStats = $('endStats'), endBest = $('endBest');
 
 /* ================= STATE ================= */
@@ -26,7 +29,7 @@ function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
     t: 0, anim: 0, speed: 160, dist: 0, progress: 0, idleU,
     hunger: 0.7, lowBeep: 0, feedQ: [], tGulp: 0, gulpN: 0, full: 0, starving: 0, fedFish: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
     p: { x: 200, y: SEA - 6, vy: 0, flap: 0, inv: 0, breath: 1, gasp: false, wasUnder: false },
-    beak: [], score: 0, deliveries: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
+    beak: [], score: 0, deliveries: 0, fishDelivered: 0, saves: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
     fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], gannets: [], bergs: [], cliffs: [], parts: [], pops: [],
     tFish: 0.5, tGull: 3, tCliff: 5.5, tGold: rand(9, 14),
     tSeal: level.seals ? level.seals.first : Infinity, tHunt: level.hunters ? level.hunters.first : Infinity,
@@ -101,7 +104,7 @@ function deliver(c, quiet) {
   const saved = st.starving > 0;
   chatterFed(st.hunger, saved);
   if (saved) { st.starving = 0; pop('Just in time!', c.x + c.w * BURROW, c.top - 30, '#feb445', 22); }
-  st.fedFish += n + gold;
+  st.fedFish += n + gold; st.fishDelivered += n; if (saved) st.saves++;
   // The puffling gulps the fish down one at a time, starting once they reach the burrow.
   // quiet (the finale) feeds it all at once, since the run is ending.
   const amounts = c.note.beak.map(g => (g ? 2 : 1) * FEED_PER_FISH);
@@ -595,11 +598,64 @@ function endGame(reason) {
   nextBtn.dataset.level = next;
   if (next >= 0) nextBtn.textContent = `Next: ${LEVELS[next].name}`;
   againBtn.className = next >= 0 ? 'secondary' : 'primary';
+  // outfits earned this run
+  const fresh = recordRun(st, complete);
+  endUnlock.hidden = !fresh.length;
+  if (fresh.length) {
+    const o = fresh[0];
+    unlockName.textContent = o.name;
+    unlockMore.textContent = fresh.length > 1 ? `And ${fresh.length - 1} more in the Wardrobe.` : o.unlock.replace(/\.$/, '') + '.';
+    wearBtn.dataset.outfit = o.id; wearBtn.textContent = 'Wear it'; wearBtn.disabled = false;
+    Snd.golden();
+  }
   endBest.innerHTML = isBest && score > 0 ? '<span class="newbest">New best score.</span>' : `Your best: ${Math.max(best, score)}`;
   hud.hidden = true; endPanel.hidden = false;
+  if (fresh.length) drawOutfitCard(unlockCv, fresh[0]);        // now it's laid out
   const keepParts = st.parts, keepPops = st.pops;
   st = newState(1, currentLevel); st.parts = keepParts; st.pops = keepPops;
   (next >= 0 ? nextBtn : againBtn).focus({ preventScroll: true });
+}
+
+/* ---------- wardrobe ---------- */
+let wardView = null, wardT = 0;
+function openWardrobe() {
+  startPanel.hidden = true; wardPanel.hidden = false;
+  const worn = wornOutfit();
+  wardView = worn || OUTFITS[0];
+  renderWardrobe();
+  const b = wardGrid.querySelector('[aria-pressed="true"]');
+  (b || wardDone).focus({ preventScroll: true });
+}
+function closeWardrobe() { wardPanel.hidden = true; showLevels(); }
+function renderWardrobe() {
+  const stats = loadStats(), worn = wornOutfit() || OUTFITS[0];
+  wardGrid.innerHTML = '';
+  for (const o of OUTFITS) {
+    const open = outfitOpen(o, stats);
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ward-item' + (o === wardView ? ' viewing' : '');
+    b.setAttribute('aria-pressed', o === worn ? 'true' : 'false');
+    b.setAttribute('aria-label', open ? o.name : `${o.name}, locked. ${o.unlock}`);
+    const cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
+    b.appendChild(cv);
+    b.addEventListener('click', () => {
+      wardView = o;
+      if (open) { wearOutfit(o.id); Snd.init(); Snd.catchFish(3); }
+      renderWardrobe();
+      const again = wardGrid.children[OUTFITS.indexOf(o)];
+      if (again) again.focus({ preventScroll: true });
+    });
+    wardGrid.appendChild(b);
+    drawOutfitCard(cv, o, { locked: !open });
+  }
+  const open = outfitOpen(wardView, stats);
+  wardName.textContent = open ? wardView.name : `${wardView.name} (locked)`;
+  wardNote.textContent = !open ? wardView.unlock : wardView === worn ? 'Wearing it.' : 'Tap to wear it.';
+}
+function drawWardrobe(dt) {
+  if (wardPanel.hidden || !wardView) return;
+  wardT += dt;
+  drawOutfitCard(wardCv, wardView, { scene: true, t: wardT, locked: !outfitOpen(wardView) });
 }
 
 function frame(now) {
@@ -608,6 +664,7 @@ function frame(now) {
   if (running) { update(dt); if (running) updateHud(); } else idle(dt);
   draw();
   drawPreview(dt);
+  drawWardrobe(dt);
   requestAnimationFrame(frame);
 }
 
@@ -626,11 +683,15 @@ stage.addEventListener('pointerdown', e => {
 ['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { holding = false; }));
 stage.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => {
+  if (!wardPanel.hidden) {                              // the wardrobe has its own buttons; Escape closes it
+    if (e.code === 'Escape') { e.preventDefault(); closeWardrobe(); }
+    return;
+  }
   if (!running && !startPanel.hidden && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
     e.preventDefault(); selectLevel(selected + (e.code === 'ArrowRight' ? 1 : -1)); return;
   }
-  if (e.code === 'KeyU' && e.shiftKey && !running) {   // testing: unlock every level
-    store.set('capelin-run-unlocked', String(LEVELS.length - 1)); renderPicker(); return;
+  if (e.code === 'KeyU' && e.shiftKey && !running) {   // testing: unlock every level and outfit
+    store.set('capelin-run-unlocked', String(LEVELS.length - 1)); store.set('capelin-run-outfits-all', '1'); renderPicker(); return;
   }
   if (e.code === 'KeyM' && !e.repeat) { Snd.init(); Snd.toggle(); syncMute(); return; }
   if (e.code !== 'Space' && e.code !== 'ArrowDown') return;
@@ -642,6 +703,11 @@ window.addEventListener('blur', () => { holding = false; });
 document.addEventListener('visibilitychange', () => { holding = false; last = 0; });
 againBtn.addEventListener('click', () => (againBtn.dataset.tutorial ? startTutorial() : start(currentLevel)));
 howBtn.addEventListener('click', startTutorial);
+wardBtn.addEventListener('click', openWardrobe);
+wardDone.addEventListener('click', closeWardrobe);
+wearBtn.addEventListener('click', () => {
+  wearOutfit(wearBtn.dataset.outfit); wearBtn.textContent = 'Wearing it'; wearBtn.disabled = true;
+});
 tutSkip.addEventListener('click', skipTutorial);
 chooseBtn.addEventListener('click', showLevels);
 nextBtn.addEventListener('click', () => start(Number(nextBtn.dataset.level)));

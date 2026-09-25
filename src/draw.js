@@ -9,7 +9,10 @@ const PUF = {
   beak: '#f94a18', band: '#feb445', plate: '#6b7c90', foot: '#f94a18', ring: '#dc362c'
 };
 
+let curOutfit = null;                            // the outfit being drawn right now (see drawPuffin)
+
 function puffinFoot(fx, fy, s) {                  // a webbed foot, toes pointing forward
+  if (curOutfit && curOutfit.boots) { drawBoot(fx, fy, s); return; }
   ctx.beginPath();
   ctx.moveTo(fx - 2 * s, fy);
   ctx.quadraticCurveTo(fx + 3 * s, fy - 2.2 * s, fx + 7 * s, fy + 0.2 * s);
@@ -69,9 +72,21 @@ function puffinHead(beak) {
   ctx.strokeStyle = 'rgba(110,30,8,0.55)'; ctx.lineWidth = 0.6;                   // mouth line
   ctx.beginPath(); ctx.moveTo(21.5, -5.2); ctx.lineTo(33.6, -4.6); ctx.stroke();
   ctx.fillStyle = PUF.band; ell(21.4, -4.6, 1.3, 1.1);                             // rosette at the gape
+  if (curOutfit && curOutfit.head) curOutfit.head();                              // hat, scarf, glasses...
 }
 
+// o.me: the player's puffin, which wears the chosen outfit. o.outfit: wear this one instead (previews).
+// Outfits only change the look: colours, feet, and something drawn with the head.
 function drawPuffin(x, y, sc, ang, o) {
+  const outfit = o.outfit !== undefined ? o.outfit : (o.me ? wornOutfit() : null);
+  if (!outfit) { drawPuffinPose(x, y, sc, ang, o); return; }
+  const keep = { ...PUF };
+  Object.assign(PUF, outfit.colors || {}, outfit.boots ? { foot: '#1b1f26' } : {});
+  curOutfit = outfit;
+  try { drawPuffinPose(x, y, sc, ang, o); } finally { Object.assign(PUF, keep); curOutfit = null; }
+}
+
+function drawPuffinPose(x, y, sc, ang, o) {
   if (o.stand) { drawPuffinStanding(x, y, sc, ang - UPRIGHT, o); return; }
   ctx.save();
   ctx.translate(x, y);
@@ -133,12 +148,17 @@ function drawPuffinStanding(x, y, sc, lean, o) {
   const spread = o.wing === 'spread' || (o.lift || 0) > 0.5;
   ctx.save(); ctx.translate(x, y); ctx.scale(o.flip ? -sc : sc, sc);
   // legs and feet stay planted on the ground
-  ctx.strokeStyle = PUF.foot; ctx.fillStyle = PUF.foot; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-  for (const [dx, ph] of [[-5, 0], [3.5, Math.PI]]) {
-    const up = o.step ? Math.max(0, Math.sin(o.step + ph)) * 3 : 0;
-    ctx.beginPath(); ctx.moveTo(dx, 11); ctx.lineTo(dx, 17 - up); ctx.stroke();
-    puffinFoot(dx - 0.5, 18.2 - up, 1);
-  }
+  const legs = () => {
+    ctx.strokeStyle = PUF.foot; ctx.fillStyle = PUF.foot; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    for (const [dx, ph] of [[-5, 0], [3.5, Math.PI]]) {
+      const up = o.step ? Math.max(0, Math.sin(o.step + ph)) * 3 : 0;
+      ctx.beginPath(); ctx.moveTo(dx, 11); ctx.lineTo(dx, 17 - up); ctx.stroke();
+      puffinFoot(dx - 0.5, 18.2 - up, 1);
+    }
+  };
+  const boots = curOutfit && curOutfit.boots;
+  if (!boots) legs();                              // boots go on last, over the bottom of the belly
+  ctx.save();
   // the body pivots over its feet
   ctx.translate(0, 18); ctx.rotate(lean); ctx.scale(o.sx || 1, o.sy || 1); ctx.translate(0, -18);
   const flap = Math.sin(o.flap || 0);
@@ -158,6 +178,8 @@ function drawPuffinStanding(x, y, sc, lean, o) {
     ctx.quadraticCurveTo(-4.2, 8.5, -2.8, -2); ctx.closePath(); ctx.fill();
   }
   ctx.save(); ctx.translate(-12, -10.5); puffinHead(o.beak); ctx.restore();    // head on top
+  ctx.restore();
+  if (boots) legs();
   ctx.restore();
 }
 
@@ -720,10 +742,10 @@ function draw() {
   if (p.inv > 0 && p.inv < 5 && !s.landing && !s.finale && Math.floor(t * 12) % 2) ctx.globalAlpha = 0.45;   // blink after a hit
   const L = s.landing || s.finale;
   if (L) {
-    drawPuffin(p.x, p.y, 1, L.pose.ang, { ...L.pose, beak: s.beak, flap: p.flap });
+    drawPuffin(p.x, p.y, 1, L.pose.ang, { ...L.pose, beak: s.beak, flap: p.flap, me: true });
   } else {
     const ang = running ? (p.ang !== undefined ? p.ang : 0) : 0;
-    drawPuffin(p.x, p.y, 1, ang, { under, floating: !running, beak: s.beak, flap: p.flap });
+    drawPuffin(p.x, p.y, 1, ang, { under, floating: !running, beak: s.beak, flap: p.flap, me: true });
   }
   ctx.restore();
   if (L && L.pose.dizzy > 0) {

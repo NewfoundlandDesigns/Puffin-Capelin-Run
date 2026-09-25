@@ -22,6 +22,25 @@ Each level has its own scenery: clear skies and rolling hills (Capelin Scull), o
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
 
+## Outfits
+
+The level picker has a **Wardrobe**: outfits for your puffin, earned by playing, one worn at a time. They only change the look, never how the puffin plays. Locked ones show as silhouettes with what earns them, and the end screen announces a new one with a **Wear it** button.
+
+| Outfit | Earned by |
+|---|---|
+| Sou'wester | Finishing Baccalieu Tickle |
+| Knitted toque | Finishing Iceberg Alley |
+| Newfoundland tartan scarf | Delivering a full 12-fish stack |
+| Rubber boots | Delivering 250 capelin in all |
+| Sunglasses | Scoring 5,000 on Trinity Bay |
+| Pitcher plant crown | Growing your puffling to full size in one run |
+| Lucky horseshoe | Saving your puffling at the last second 5 times |
+| Captain's cap | Finishing Funk Island |
+| Golden puffin | Catching 50 golden capelin in all |
+| Mummer | Finishing all seven levels |
+
+Outfits live in `src/outfits.js`: each is one entry in `OUTFITS` with its unlock test and a draw function. Lifetime stats are saved in the browser (`capelin-run-stats`); levels finished before outfits existed count too.
+
 ## How to play
 
 The level picker has a **How to play** button that starts a guided practice run: no dangers, one skill at a time (dive, rise, catch, deliver, feeding the puffling, stacking and golden capelin, dangers, getting home). It lives in `src/tutorial.js`; each step is one entry in `TUT_STEPS`.
@@ -50,6 +69,7 @@ src/icebergs.js   icebergs, mostly underwater, that knock your catch loose (Iceb
 src/gannets.js    gannets that plunge-dive from above and knock your catch loose (Funk Island)
 src/finale.js     end-of-level zoom and crash landing at the home colony
 src/tutorial.js   the guided How to play run
+src/outfits.js    outfits: unlock tests, lifetime stats, and how each one is drawn
 src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edit the lines here)
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
@@ -58,7 +78,7 @@ tools/smoke-test.mjs  plays through every level, the tutorial and key failure ca
 
 The scripts are plain classic scripts that share globals, loaded in order, so the game runs straight from the file system.
 
-Testing: `UNLOCK_ALL` in `src/util.js` makes every level playable (currently on; set it to `false` before release). Shift+U on the level picker also unlocks everything.
+Testing: `UNLOCK_ALL` in `src/util.js` makes every level and outfit available (currently on; set it to `false` before release). Shift+U on the level picker also unlocks everything.
 
 ## Single-file build
 

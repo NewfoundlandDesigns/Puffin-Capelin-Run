@@ -40,6 +40,7 @@ gannets.js   plunge-diving gannets: shadow warning, spear dive aimed at puffin o
 finale.js    end-of-level zoom and crash landing at the home colony
 tutorial.js  guided How to play run (TUT_STEPS)
 chatter.js   puffling and puffin speech bubbles (edit the lines here)
+outfits.js   OUTFITS (unlock tests + draw fns), lifetime stats, wardrobe/unlock card drawing
 game.js      DOM refs, state (newState), update loop, spawning, collisions, HUD,
              level picker with live preview, start/end flow, input, main loop
 ```
@@ -59,6 +60,13 @@ Key ideas:
 - Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
   (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
   as it dives away (`drawFluke`, harmless).
+- Outfits: looks only (Mark was clear: no gameplay effect), one worn at a time. Only the
+  player's puffin wears it (`drawPuffin` with `o.me`), not its mate. A head outfit draws in
+  the head's own coordinates at the end of `puffinHead`, so it follows every pose; `colors`
+  swaps PUF temporarily (golden); `boots` replaces `puffinFoot` (and draws over the belly when
+  standing). Run stats (`fishDelivered`, `saves`, `bestDrop`, `goldCaught`, `fedFish`) are added
+  to lifetime stats in `recordRun()` at `endGame`; the tutorial doesn't count. Seen outfits are
+  stored so each is announced once. Keys: capelin-run-stats, -outfit, -outfits-seen, -outfits-all.
 - Whales draw in two passes (`drawWhaleBack` before the puffin, `drawWhaleFront` after) so
   the jaws can close over a caught puffin.
 - The level picker preview draws the real scene by temporarily swapping `ctx`, `VW`, `S`,

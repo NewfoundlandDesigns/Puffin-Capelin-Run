@@ -21,10 +21,10 @@ const ctx = new Proxy({}, {
 });
 const els = {};
 const el = id => ({
-  id, hidden: id === 'say', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
+  id, hidden: id === 'say' || id === 'wardPanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
   children: [], offsetWidth: 1, parentElement: {},
   classList: { toggle() {}, add() {}, remove() {} },
-  querySelector: () => ({ style: {}, classList: { toggle() {}, remove() {} } }),
+  querySelector: () => ({ style: {}, focus() {}, classList: { toggle() {}, remove() {} } }),
   addEventListener(e, f) { this['on' + e] = f; }, appendChild(c) { this.children.push(c); },
   setAttribute() {}, focus() {}, blur() {}, getContext: () => ctx,
   getBoundingClientRect: () => ({ width: id === 'pvCanvas' ? 400 : 1200, height: id === 'pvCanvas' ? 300 : 700 }),
@@ -40,7 +40,7 @@ Object.assign(globalThis, {
   requestAnimationFrame: cb => { raf = cb; },
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 }
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, loadStats, outfitEarned, recordRun, wearOutfit, wornOutfit };');
 const T = globalThis.__T;
 const SEA = 270;
 
@@ -98,6 +98,39 @@ for (let i = 0; i < T.LEVELS.length; i++) {
   while (!ended() && f < 60 * 200) { T.st.p.inv = Math.max(T.st.p.inv, 2); T.st.hunger = 1; frame(); f++; }
   check(`level ${i + 1} (${T.LEVELS[i].name}) reaches home`, els.endTitle.textContent === 'Home by nightfall', `${Math.round(f / 60)}s`);
 }
+
+// 2b. Outfits: finishing every level is recorded, and earns the level outfits and the mummer
+{
+  const stats = T.loadStats(), earned = id => T.outfitEarned(T.OUTFITS.find(o => o.id === id), stats);
+  check('finished levels are recorded', T.LEVELS.every(l => stats.done.includes(l.id)), stats.done.join(', '));
+  check('level outfits unlock', ['souwester', 'toque', 'captain', 'mummer'].every(earned));
+  check('stat outfits stay locked until earned', !earned('boots') && !earned('golden') && !earned('horseshoe'));
+  const again = T.recordRun({ level: T.LEVELS[0], fishDelivered: 0, goldCaught: 0, saves: 0, bestDrop: 0, fedFish: 0 }, true);
+  check('an outfit is only announced once', again.length === 0);
+  const got = T.recordRun({ level: T.LEVELS[0], fishDelivered: 300, goldCaught: 0, saves: 0, bestDrop: 12, fedFish: 0 }, false);
+  check('lifetime totals unlock outfits', got.map(o => o.id).sort().join() === 'boots,tartan', got.map(o => o.id).join());
+}
+// 2c. Every outfit draws in flight, underwater, landing and standing without errors
+{
+  let ok = true;
+  for (const o of T.OUTFITS) {
+    T.wearOutfit(o.id);
+    try {
+      T.start(0); quiet(T.st); T.st.p.inv = 99;
+      for (let f = 0; f < 5; f++) frame();
+      T.st.p.y = SEA + 80; frame();
+      T.st.beak = [false, true]; T.deliver({ x: 400, w: 160, top: 130, used: false }); frame();
+    } catch (e) { ok = false; console.log('  ', o.id, e.message); }
+  }
+  check('every outfit draws in every pose', ok);
+  check('the chosen outfit is worn', T.wornOutfit() && T.wornOutfit().id === T.OUTFITS[T.OUTFITS.length - 1].id);
+  T.wearOutfit('none');
+}
+// 2d. The wardrobe opens with every outfit, and closes back to the level picker
+els.wardBtn.onclick();
+check('wardrobe shows every outfit', !els.wardPanel.hidden && els.wardGrid.children.length === T.OUTFITS.length);
+els.wardDone.onclick();
+check('wardrobe closes to the level picker', els.wardPanel.hidden && !els.startPanel.hidden);
 
 // 3. Whale: swallowed in the ring near the surface, safe deep beneath it
 const whaleIdx = T.LEVELS.findIndex(l => l.whales);
