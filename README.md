@@ -14,7 +14,7 @@ Each level brings in one new foe, plus a little of something from earlier, so th
 4. **Cape St. Mary's.** Jaegers, pirate seabirds that chase any puffin carrying fish and steal the stack. Dive to lose them. The odd hunting gull.
 5. **Iceberg Alley.** Icebergs drifting out of the fog, most of each one hidden underwater. Bumping one knocks your catch loose. A few jaegers.
 6. **Trinity Bay.** Humpback whales feeding on capelin. A bubble ring and a shaded zone warn where one will lunge. Get caught in its mouth and it swallows you, which ends the run; get clear of the ring or dive deep and pass under it. A few seals too.
-7. **Funk Island.** The hardest level: northern gannets, which plunge-dive like spears from high above. A shadow slides across the water toward you while one circles overhead, then it drops straight down and deep into the sea, aiming at you or at the capelin you're after. A hit knocks your catch loose; change depth as the shadow reaches you, or dive below it. A few whales too. Funk Island, far off the northeast coast, is home to a big gannet colony.
+7. **Funk Island.** The hardest level: northern gannets, which plunge-dive like spears from high above. One flies in and stalks you from just ahead, its shadow following you on the water. When it locks on (a sharp cry, the shadow turns red) it tips nose-down, then drops straight down and deep into the sea at the depth you were at. A hit knocks your catch loose; change depth once it locks on, or dive below it. A few whales too. Funk Island, far off the northeast coast, is home to a big gannet colony.
 
 Later levels give the puffling a little more patience (`hungerSeconds` 27, 28, 30 and 30 for Levels 4 to 7, instead of 25).
 

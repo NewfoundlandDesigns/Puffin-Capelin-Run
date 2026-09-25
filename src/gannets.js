@@ -1,63 +1,71 @@
-/* Gannets (Funk Island). Big white plunge-divers. One circles high overhead while its shadow
-   slides across the water toward you, then it folds its wings and drops like a spear, straight
-   down and deep into the sea. It aims at where you are, or at the capelin you're after.
-   A hit knocks your catch loose and shoves you under, but it isn't fatal. Change depth as the
-   shadow reaches you, or dive below it. A near miss scatters the school it was aiming at. */
-const GANNET = { WARN: 1.4, TOP: 100, AIR: 0.38, SEA_T: 0.3, DEPTH: 150, RISE: 1.1 };
+/* Gannets (Funk Island). Big white plunge-divers. One flies in and stalks the puffin from just
+   ahead and above, following its depth, with its shadow on the water. Then it locks on: a sharp
+   cry, it tips nose-down, and the shadow turns red. Half a second later it folds its wings and
+   drops like a spear, straight down and deep into the sea, at the depth you were at when it
+   locked on. A hit knocks your catch loose and shoves you under, but it isn't fatal: change depth
+   once it locks on, or dive below it. A plunge also eats or scatters any capelin in the way. */
+const GANNET = { STALK: 1.3, LOCK: 0.5, TOP: 100, AIR: 0.38, SEA_T: 0.3, DEPTH: 150, RISE: 1.1 };
 
-// Height of a diving gannet's bill, d seconds into the dive: accelerating through the air,
-// then slowing hard underwater until it stops GANNET.DEPTH below the surface.
-function gannetY(d) {
+// Height of a diving gannet's bill, d seconds into a dive that started at height top:
+// accelerating through the air, then slowing hard underwater until it stops GANNET.DEPTH down.
+function gannetY(d, top = GANNET.TOP) {
   const G = GANNET;
-  if (d <= G.AIR) return G.TOP + (SEA - G.TOP) * Math.pow(d / G.AIR, 2);
+  if (d <= G.AIR) return top + (SEA - top) * Math.pow(d / G.AIR, 2);
   const e = Math.min(1, (d - G.AIR) / G.SEA_T);
   return SEA + G.DEPTH * (1 - Math.pow(1 - e, 2));
 }
 // ...and the inverse: how long into the dive it reaches height y
-function gannetTimeTo(y) {
+function gannetTimeTo(y, top = GANNET.TOP) {
   const G = GANNET;
-  if (y <= SEA) return G.AIR * Math.sqrt(Math.max(0, y - G.TOP) / (SEA - G.TOP));
+  if (y <= SEA) return G.AIR * Math.sqrt(Math.max(0, y - top) / (SEA - top));
   return G.AIR + G.SEA_T * (1 - Math.sqrt(Math.max(0, 1 - (y - SEA) / G.DEPTH)));
 }
+// It dives from above the puffin, so flying high doesn't keep you out of reach
+const gannetTop = y => clamp(y - 110, 36, GANNET.TOP);
+const gannetAimY = y => clamp(y, gannetTop(y) + 24, SEA + GANNET.DEPTH - 12);
+// How far ahead of the puffin to be when locking on, so the dive meets it at depth y
+const gannetLead = y => st.speed * (GANNET.LOCK + gannetTimeTo(gannetAimY(y), gannetTop(y)));
 
 function spawnGannet() {
-  const s = st, p = s.p, G = GANNET;
-  // Aim at a school ahead some of the time, otherwise at the puffin (a little off, so it can miss)
-  const school = s.fish.filter(f => !f.gold && f.x > p.x + 260 && f.x < VW + 200 && f.y < SEA + G.DEPTH - 10);
-  let x0, ay;
-  if (school.length && Math.random() < 0.45) {
-    const f = school[randInt(0, school.length - 1)];
-    ay = f.y;
-    x0 = f.x + (f.vx + s.speed) * (G.WARN + gannetTimeTo(ay));
-  } else {
-    ay = clamp(p.y + rand(-25, 25), G.TOP + 30, SEA + G.DEPTH - 12);
-    x0 = p.x + s.speed * (G.WARN + gannetTimeTo(ay));
-  }
-  s.gannets.push({ x: x0, y: G.TOP, state: 'circle', t: G.WARN, d: 0, ph: rand(0, 6.28), splashed: false, ate: 0 });
+  const s = st;
+  s.gannets.push({ x: VW + 60, y: GANNET.TOP - 30, top: GANNET.TOP, state: 'stalk', t: GANNET.STALK, d: 0,
+    ph: rand(0, 6.28), splashed: false, ate: 0 });
   Snd.gannetCall();
 }
 
 function updateGannets(wdt, scroll) {
   const s = st, p = s.p, G = GANNET;
   for (const g of s.gannets) {
-    g.x -= scroll * wdt;
-    if (g.state === 'circle') {
+    if (g.state === 'stalk') {                         // shadows the puffin from just ahead, matching its depth
       g.t -= wdt;
-      g.y = G.TOP + Math.sin(s.anim * 3 + g.ph) * 4;
+      const tx = p.x + gannetLead(p.y), ty = gannetTop(p.y) + Math.sin(s.anim * 3 + g.ph) * 4;
+      g.x += (tx - g.x) * Math.min(1, wdt * 3.2);
+      g.y += (ty - g.y) * Math.min(1, wdt * 3);
+      if (g.t <= 0 && !s.landing) {                    // lock on: commit to the puffin's depth now
+        g.state = 'lock'; g.t = G.LOCK;
+        g.aimY = gannetAimY(p.y + p.vy * 0.12);
+        g.top = gannetTop(g.aimY);
+        g.x = p.x + s.speed * (G.LOCK + gannetTimeTo(g.aimY, g.top));
+        Snd.gannetLock();
+      }
+    } else if (g.state === 'lock') {                   // a beat to react: tips nose-down, shadow turns red
+      g.x -= scroll * wdt; g.t -= wdt;
+      g.y += (g.top - g.y) * Math.min(1, wdt * 10);
       if (g.t <= 0) { g.state = 'dive'; g.d = 0; Snd.gannetDive(); }
     } else if (g.state === 'dive') {
+      g.x -= scroll * wdt;
       g.d += wdt;
-      g.y = gannetY(g.d);
+      g.y = gannetY(g.d, g.top);
       if (!g.splashed && g.y >= SEA) gannetSplash(g);
       if (p.inv <= 0 && !s.landing && !s.caught && !s.finale &&
-          Math.abs(p.x - g.x) < 18 && p.y > g.y - 50 && p.y < g.y + 12) gannetHit(g);
+          Math.abs(p.x - g.x) < 18 && p.y > g.y - 30 && p.y < g.y + 12) gannetHit(g);   // the bill and head, not the tail
       if (g.d >= G.AIR + G.SEA_T) { g.state = 'rise'; g.t = G.RISE; }
       if (Math.random() < wdt * 30 && g.y > SEA + 8) {        // bubble trail
         s.parts.push({ x: g.x + rand(-4, 4), y: g.y - rand(10, 30), vx: -scroll * 0.3, vy: -rand(40, 80), g: -20,
           r: rand(1, 2.5), life: 0.8, max: 0.8, color: 'rgba(225,238,248,0.7)', ring: true });
       }
     } else if (g.state === 'rise') {                  // bobs back up and flies off, harmless
-      g.t -= wdt;
+      g.x -= scroll * wdt; g.t -= wdt;
       const k = 1 - g.t / G.RISE;
       g.y = k < 0.55 ? lerp(SEA + G.DEPTH, SEA - 4, easeOut(k / 0.55)) : SEA - 4 - 260 * Math.pow((k - 0.55) / 0.45, 2);
       g.x += k > 0.55 ? 120 * wdt : 0;
@@ -94,14 +102,17 @@ function gannetHit(g) {
 // White body, black wingtips, a buff-yellow head and a long pale bill
 function drawGannet(g, t) {
   const night = st.fixedU !== undefined ? 0 : clamp((st.progress - 0.62) / 0.22, 0, 1);
-  if (g.state === 'circle') {
-    // its shadow on the water, darkening as the dive comes
-    const k = 1 - g.t / GANNET.WARN;
-    ctx.strokeStyle = `rgba(255,255,255,${0.12 + 0.2 * k})`; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
+  const stalking = g.state === 'stalk', locked = g.state === 'lock';
+  if (stalking || locked) {
+    // its shadow on the water: amber while it stalks, red once it has locked on
+    const k = locked ? 1 - g.t / GANNET.LOCK : 0;
+    const col = locked ? '220,54,44' : '254,180,69';
+    ctx.strokeStyle = `rgba(255,255,255,${locked ? 0.35 : 0.14})`; ctx.lineWidth = 1; ctx.setLineDash([3, 6]);
     ctx.beginPath(); ctx.moveTo(g.x, g.y + 16); ctx.lineTo(g.x, SEA - 2); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle = `rgba(5,13,24,${0.18 + 0.32 * k})`; ell(g.x, SEA + 5, 8 + 10 * k, 3 + 2 * k);
-    ctx.strokeStyle = `rgba(254,180,69,${(0.35 + 0.4 * k) * (0.6 + 0.4 * Math.sin(t * 10))})`; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.ellipse(g.x, SEA + 5, 14 + 8 * k, 5 + 2 * k, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = `rgba(5,13,24,${locked ? 0.45 + 0.2 * k : 0.22})`; ell(g.x, SEA + 5, locked ? 16 + 6 * k : 12, locked ? 5 : 4);
+    ctx.strokeStyle = `rgba(${col},${(locked ? 0.95 : 0.55) * (0.6 + 0.4 * Math.sin(t * (locked ? 22 : 8)))})`;
+    ctx.lineWidth = locked ? 2.5 : 1.5;
+    ctx.beginPath(); ctx.ellipse(g.x, SEA + 5, locked ? 24 - 6 * k : 18, locked ? 8 - 2 * k : 6, 0, 0, Math.PI * 2); ctx.stroke();
     if (g.x > VW - 10) {                               // warning at the right edge as it comes in
       const a = 0.6 + 0.4 * Math.sin(t * 14);
       ctx.fillStyle = `rgba(220,54,44,${a})`;
@@ -109,8 +120,10 @@ function drawGannet(g, t) {
     }
   }
   const diving = g.state === 'dive';
-  const flying = g.state === 'circle' || (g.state === 'rise' && g.y < SEA - 20);
-  const ang = diving ? Math.PI / 2 : flying ? (g.state === 'rise' ? -0.5 : Math.sin(t * 1.5 + g.ph) * 0.08) : 0;
+  const flying = stalking || locked || (g.state === 'rise' && g.y < SEA - 20);
+  // locked on, it tips nose-down ready to drop
+  const ang = diving ? Math.PI / 2 : locked ? lerp(0.15, 1.1, easeInOut(1 - g.t / GANNET.LOCK))
+    : flying ? (g.state === 'rise' ? -0.5 : Math.sin(t * 1.5 + g.ph) * 0.08) : 0;
   const f = Math.sin(t * (g.state === 'rise' ? 14 : 3) + g.ph);
   ctx.save(); ctx.translate(g.x, g.y); ctx.rotate(ang); ctx.scale(1.9, 1.9);
   if (diving) ctx.translate(-14, 0);                   // the bill leads the dive

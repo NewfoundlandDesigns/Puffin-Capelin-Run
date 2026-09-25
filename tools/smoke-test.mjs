@@ -112,21 +112,27 @@ check('diving deep passes under the whale', whaleTrial(SEA + 220) === 'survived'
 
 // 3b. Gannets: aimed at the puffin, a hit knocks the catch loose; far enough below, it can't reach
 const gannetIdx = T.LEVELS.findIndex(l => l.gannets);
-function gannetTrial(y) {
+function gannetTrial(y, yAfterLock = y) {
   T.start(gannetIdx); quiet(T.st); T.st.tGannet = 999; T.st.fish = []; T.st.tFish = 999;
-  T.st.p.inv = 0; T.st.p.y = y; T.st.beak = [false, false, false];
+  T.st.p.inv = 0; T.st.beak = [false, false, false];
   frame();                                              // puffin settles at its usual x
-  T.st.p.y = y; T.spawnGannet();
-  for (let f = 0; f < 60 * 4 && T.st.gannets.length; f++) {
-    T.st.p.y = y; T.st.p.vy = 0; T.st.p.breath = 1;
+  T.spawnGannet();
+  const g = T.st.gannets[0];
+  for (let f = 0; f < 60 * 5 && T.st.gannets.length; f++) {
+    const target = g.state === 'stalk' ? y : yAfterLock;
+    const p = T.st.p;
+    p.y += clamp(target - p.y, -5.5, 5.5); p.vy = 0; p.breath = 1;   // about the puffin's top speed
     if (T.st.beak.length < 3) return 'hit';
     frame();
   }
   return T.st.beak.length < 3 ? 'hit' : 'safe';
 }
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const trials = n => Array.from({ length: n }, (_, i) => i);
-check('gannet hits a puffin in the air', trials(5).every(() => gannetTrial(SEA - 70) === 'hit'));
-check('gannet hits a puffin underwater', trials(5).every(() => gannetTrial(SEA + 60) === 'hit'));
+check('gannet hits a puffin that stays at its depth (air)', trials(5).every(() => gannetTrial(SEA - 70) === 'hit'));
+check('gannet hits a puffin that stays at its depth (underwater)', trials(5).every(() => gannetTrial(SEA + 60) === 'hit'));
+check('gannet reaches a puffin flying high', trials(5).every(() => gannetTrial(60) === 'hit'));
+check('changing depth after it locks on dodges it', trials(5).every(() => gannetTrial(SEA + 70, SEA - 70) === 'safe'));
 check('diving below the gannet is safe', trials(5).every(() => gannetTrial(SEA + 230) === 'safe'));
 {
   T.start(gannetIdx); quiet(T.st); T.st.tGannet = 999; T.st.tFish = 999; T.st.p.inv = 99;

@@ -301,7 +301,7 @@ function update(dt) {
   }
   s.tGannet -= wdt;
   if (s.tGannet <= 0 && !late) {       // one diving at a time, and never onto a landing
-    if (s.gannets.some(g => g.state === 'circle') || s.landing) s.tGannet = 0.8;
+    if (s.gannets.some(g => g.state === 'stalk' || g.state === 'lock') || s.landing) s.tGannet = 0.8;
     else { spawnGannet(); s.tGannet = rand(...s.level.gannets.every) - u * 1.5; }
   }
   s.tBerg -= wdt;

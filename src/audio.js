@@ -100,6 +100,7 @@ const Snd = (() => {
     },
     gulp() { tone(220, 0.25, { type: 'sine', vol: 0.18, slideTo: 90 }); },
     gannetCall() { tone(520, 0.12, { type: 'sawtooth', vol: 0.05, slideTo: 380 }); tone(480, 0.14, { type: 'sawtooth', vol: 0.05, slideTo: 340, delay: 0.14 }); },
+    gannetLock() { tone(1300, 0.09, { type: 'sawtooth', vol: 0.06, slideTo: 900 }); tone(1400, 0.1, { type: 'sawtooth', vol: 0.06, slideTo: 950, delay: 0.1 }); },
     gannetDive() { tone(2200, 0.42, { type: 'sine', vol: 0.06, slideTo: 700 }); noise(0.4, { vol: 0.06, freq: 2500, sweepTo: 900, q: 1 }); },
     gannetHit() { noise(0.14, { vol: 0.28, freq: 600, filter: 'lowpass' }); tone(300, 0.2, { type: 'triangle', vol: 0.12, slideTo: 150 }); },
     jaegerCall() { tone(1500, 0.16, { type: 'square', vol: 0.05, slideTo: 1100 }); tone(1600, 0.2, { type: 'square', vol: 0.05, slideTo: 1000, delay: 0.18 }); },

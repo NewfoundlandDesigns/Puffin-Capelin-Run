@@ -56,6 +56,9 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
+  (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
+  as it dives away (`drawFluke`, harmless).
 - Whales draw in two passes (`drawWhaleBack` before the puffin, `drawWhaleFront` after) so
   the jaws can close over a caught puffin.
 - The level picker preview draws the real scene by temporarily swapping `ctx`, `VW`, `S`,
@@ -82,10 +85,13 @@ Key ideas:
   odd hunter), Iceberg Alley (bergs + a few jaegers), Trinity Bay (whales + a few seals),
   Funk Island (gannets + a few whales). Funk Island is last because gannets plus whales is
   the hardest mix.
-- Gannets (Funk Island): one circles above while its shadow slides in (`GANNET.WARN`), then
-  dives straight down to `GANNET.DEPTH` below the surface. It's aimed at the puffin's depth at
-  spawn (with some jitter) or, 45% of the time, at a school ahead, so it competes for fish.
-  Dodge by changing depth as the shadow arrives, or dive deeper than it goes. A hit only
+- Gannets (Funk Island): stalk -> lock -> dive. It stalks from just ahead and above the puffin
+  for `GANNET.STALK` s, following its depth; then locks on (cry, red shadow, nose-down) and
+  commits to the puffin's depth at that moment; `GANNET.LOCK` s later it dives straight down to
+  `GANNET.DEPTH` below the surface, timed to meet the puffin. The first version aimed at spawn
+  and at schools far ahead, so it was never a real threat (Mark's feedback). It dives from
+  above the puffin (`gannetTop`), so flying high isn't a hiding place. Only the bill and head
+  hit, so pulling up or down after the lock dodges it; so does diving below it. A hit only
   costs the stack (like gulls/jaegers); a plunge eats up to 2 capelin and scatters the rest
   (`f.dy`).
 - Whales are fatal, but only the head/mouth once it breaks the surface; diving below the
