@@ -1,4 +1,4 @@
-// Bundles index.html + src/ into one self-contained file: dist/fun-puffin.html
+// Bundles index.html + src/ into one self-contained file: dist/beakful.html
 // Usage: node tools/build.mjs
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -15,5 +15,5 @@ html = html.replace(/<script src="([^"]+)"><\/script>\n?/g, (_, src) => { script
 html = html.replace('</body>', `<script>\n(() => {\n${scripts.join('\n')}\n})();\n</script>\n</body>`);
 
 mkdirSync(join(root, 'dist'), { recursive: true });
-writeFileSync(join(root, 'dist', 'fun-puffin.html'), html);
-console.log(`Built dist/fun-puffin.html (${(html.length / 1024).toFixed(1)} KB)`);
+writeFileSync(join(root, 'dist', 'beakful.html'), html);
+console.log(`Built dist/beakful.html (${(html.length / 1024).toFixed(1)} KB)`);

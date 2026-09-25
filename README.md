@@ -1,4 +1,4 @@
-# Fun Puffin
+# Beakful: A Puffin Game
 
 A small one-button game about an Atlantic puffin feeding its puffling off the Newfoundland coast, from morning until nightfall.
 
@@ -93,7 +93,7 @@ Pause: the pause button (bottom right), P or Esc. The game also pauses by itself
 node tools/build.mjs
 ```
 
-Writes `dist/fun-puffin.html`, with all CSS and JS inlined. Handy for sharing or hosting as one file.
+Writes `dist/beakful.html`, with all CSS and JS inlined. Handy for sharing or hosting as one file.
 
 ## Testing
 
@@ -121,4 +121,4 @@ Most of the feel lives in a few places:
 
 ---
 
-Made in Newfoundland.
+Made in Newfoundland by Fun Puffin.

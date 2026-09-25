@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 execFileSync(process.execPath, [join(root, 'tools', 'build.mjs')], { stdio: 'ignore' });
-const html = readFileSync(join(root, 'dist', 'fun-puffin.html'), 'utf8');
+const html = readFileSync(join(root, 'dist', 'beakful.html'), 'utf8');
 const js = html.match(/<script>\n\(\(\) => \{\n([\s\S]*)\}\)\(\);\n<\/script>/)[1];
 
 // ---- stubs: a canvas context that accepts anything, and minimal DOM elements ----

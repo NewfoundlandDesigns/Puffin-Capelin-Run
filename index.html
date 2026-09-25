@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Fun Puffin</title>
+<title>Beakful: A Puffin Game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="src/style.css">
 </head>
 <body>
-<main id="stage" aria-label="Fun Puffin game">
+<main id="stage" aria-label="Beakful, a puffin game">
   <canvas id="game" aria-hidden="true"></canvas>
 
   <div class="hud" id="hud" hidden>
@@ -52,7 +52,8 @@
   </div>
 
   <section class="panel" id="startPanel">
-    <h1>Fun Puffin</h1>
+    <h1>Beakful</h1>
+    <p class="subtitle">A Puffin Game</p>
     <p class="lede">Hold to dive. Let go to rise.</p>
     <p class="small">Your puffling is hungry. Stack capelin in your beak and deliver them to burrows along the way to keep it fed, and make it home by nightfall. Bigger stacks score more; golden capelin count double.</p>
     <div class="picker">
@@ -97,7 +98,7 @@
       <button id="againBtn" class="primary" type="button">Play again</button>
       <button id="chooseBtn" class="secondary" type="button">Choose level</button>
     </div>
-    <p class="keys">Made in Newfoundland</p>
+    <p class="keys">Made in Newfoundland by Fun Puffin</p>
   </section>
 
   <section class="panel ward" id="wardPanel" hidden aria-labelledby="wardTitle">
