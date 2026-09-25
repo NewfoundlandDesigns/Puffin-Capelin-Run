@@ -24,22 +24,27 @@ Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/
 
 ## Outfits
 
-The level picker has a **Wardrobe**: outfits for your puffin, earned by playing, one worn at a time. They only change the look, never how the puffin plays. Locked ones show as silhouettes with what earns them, and the end screen announces a new one with a **Wear it** button.
+The level picker has a **Wardrobe**: outfits for your puffin, earned by playing. There are five slots and your puffin can wear one of each: a hat, glasses, a scarf or necklace, boots, and feathers. They only change the look, never how the puffin plays. Items you haven't earned are greyed out with a padlock; hover over one (or tap it) to see how to earn it. The end screen announces anything new with a **Wear it** button.
 
-| Outfit | Earned by |
-|---|---|
-| Sou'wester | Finishing Baccalieu Tickle |
-| Knitted toque | Finishing Iceberg Alley |
-| Newfoundland tartan scarf | Delivering a full 12-fish stack |
-| Rubber boots | Delivering 250 capelin in all |
-| Sunglasses | Scoring 5,000 on Trinity Bay |
-| Pitcher plant crown | Growing your puffling to full size in one run |
-| Lucky horseshoe | Saving your puffling at the last second 5 times |
-| Captain's cap | Finishing Funk Island |
-| Golden puffin | Catching 50 golden capelin in all |
-| Mummer | Finishing all seven levels |
+| Slot | Item | Earned by |
+|---|---|---|
+| Hats | Sou'wester | Finishing Baccalieu Tickle |
+| | Knitted toque | Finishing Iceberg Alley |
+| | Pitcher plant crown | Growing your puffling to full size in one run |
+| | Captain's cap | Finishing Funk Island |
+| | Mummer | Finishing all seven levels |
+| Glasses | Nan's reading glasses | Finishing How to play |
+| | Sunglasses | Scoring 5,000 on Trinity Bay |
+| | Ski goggles | Making 100 deliveries in all |
+| Scarves & necklaces | Pink, white and green scarf | Finishing Capelin Scull |
+| | Newfoundland tartan scarf | Delivering a full 12-fish stack |
+| | Lucky horseshoe | Saving your puffling at the last second 5 times |
+| Boots | Rubber boots | Delivering 250 capelin in all |
+| | Knitted vamps | Playing 20 runs |
+| | Fisherman's boots | Finishing Cape St. Mary's |
+| Feathers | Golden puffin | Catching 50 golden capelin in all |
 
-Outfits live in `src/outfits.js`: each is one entry in `OUTFITS` with its unlock test and a draw function. Lifetime stats are saved in the browser (`capelin-run-stats`); levels finished before outfits existed count too.
+Outfits live in `src/outfits.js`: each is one entry in `OUTFITS` with its slot, unlock test and look. Lifetime stats are saved in the browser (`capelin-run-stats`); levels finished before outfits existed count too.
 
 ## How to play
 

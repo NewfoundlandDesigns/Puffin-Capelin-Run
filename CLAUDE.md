@@ -40,7 +40,7 @@ gannets.js   plunge-diving gannets: shadow warning, spear dive aimed at puffin o
 finale.js    end-of-level zoom and crash landing at the home colony
 tutorial.js  guided How to play run (TUT_STEPS)
 chatter.js   puffling and puffin speech bubbles (edit the lines here)
-outfits.js   OUTFITS (unlock tests + draw fns), lifetime stats, wardrobe/unlock card drawing
+outfits.js   SLOTS and OUTFITS (unlock tests + looks), lifetime stats, what's worn, card drawing
 game.js      DOM refs, state (newState), update loop, spawning, collisions, HUD,
              level picker with live preview, start/end flow, input, main loop
 ```
@@ -57,6 +57,19 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
+  (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
+  as it dives away (`drawFluke`, harmless).
+- Outfits: looks only (Mark was clear: no gameplay effect). Five SLOTS (hat, glasses, neck,
+  boots, feathers), one item worn per slot; stored as JSON {slot: id} in capelin-run-outfit (an
+  old single id is migrated to its slot). Only the player's puffin wears them (`drawPuffin` with
+  `o.me`), not its mate. Head items (neck, glasses, hat, in HEAD_ORDER) draw in the head's own
+  coordinates at the end of `puffinHead`, so they follow every pose; feathers swap PUF colours;
+  boots replace `puffinFoot` (BOOTS styles) and draw over the belly when standing. Locked items
+  are greyed out in the Wardrobe with a hover/focus tooltip giving the unlock. Run stats go into
+  lifetime stats in `recordRun()` at `endGame` (and after the tutorial, for the reading
+  glasses). Seen items are stored so each is announced once. Keys: capelin-run-stats,
+  -outfit, -outfits-seen, -outfits-all.
 - Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
   (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
   as it dives away (`drawFluke`, harmless).

@@ -131,6 +131,7 @@ function endTutorial() {
   nextBtn.hidden = false; nextBtn.dataset.level = 0; nextBtn.textContent = `Play ${LEVELS[0].name}`;
   againBtn.className = 'secondary'; againBtn.textContent = 'Replay tutorial'; againBtn.dataset.tutorial = '1';
   hud.hidden = true; endPanel.hidden = false;
+  showUnlocks(recordRun(null, false));              // Nan's reading glasses
   st = newState(0.2, 0);
   nextBtn.focus({ preventScroll: true });
 }

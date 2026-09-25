@@ -13,8 +13,8 @@ const pvNum = $('pvNum'), pvName = $('pvName'), pvBest = $('pvBest'), pvBlurb = 
 const howBtn = $('howBtn'), tut = $('tut'), tutCard = $('tutCard'), tutStep = $('tutStep'), tutTitle = $('tutTitle');
 const tutText = $('tutText'), tutHint = $('tutHint'), tutTimer = $('tutTimer'), tutSkip = $('tutSkip');
 const lvDots = $('lvDots'), prevLv = $('prevLv'), nextLv = $('nextLv'), pvLock = $('pvLock');
-const wardBtn = $('wardBtn'), wardPanel = $('wardPanel'), wardCv = $('wardCv'), wardName = $('wardName'), wardNote = $('wardNote');
-const wardGrid = $('wardGrid'), wardDone = $('wardDone');
+const wardBtn = $('wardBtn'), wardPanel = $('wardPanel'), wardCv = $('wardCv'), wardNote = $('wardNote');
+const wardSlots = $('wardSlots'), wardTip = $('wardTip'), wardDone = $('wardDone');
 const endUnlock = $('endUnlock'), unlockCv = $('unlockCv'), unlockName = $('unlockName'), unlockMore = $('unlockMore'), wearBtn = $('wearBtn');
 const endLevel = $('endLevel'), endTitle = $('endTitle'), endScore = $('endScore'), endStats = $('endStats'), endBest = $('endBest');
 
@@ -598,64 +598,103 @@ function endGame(reason) {
   nextBtn.dataset.level = next;
   if (next >= 0) nextBtn.textContent = `Next: ${LEVELS[next].name}`;
   againBtn.className = next >= 0 ? 'secondary' : 'primary';
-  // outfits earned this run
-  const fresh = recordRun(st, complete);
-  endUnlock.hidden = !fresh.length;
-  if (fresh.length) {
-    const o = fresh[0];
-    unlockName.textContent = o.name;
-    unlockMore.textContent = fresh.length > 1 ? `And ${fresh.length - 1} more in the Wardrobe.` : o.unlock.replace(/\.$/, '') + '.';
-    wearBtn.dataset.outfit = o.id; wearBtn.textContent = 'Wear it'; wearBtn.disabled = false;
-    Snd.golden();
-  }
+  const fresh = recordRun(st, complete);             // outfits earned this run
   endBest.innerHTML = isBest && score > 0 ? '<span class="newbest">New best score.</span>' : `Your best: ${Math.max(best, score)}`;
   hud.hidden = true; endPanel.hidden = false;
-  if (fresh.length) drawOutfitCard(unlockCv, fresh[0]);        // now it's laid out
+  showUnlocks(fresh);
   const keepParts = st.parts, keepPops = st.pops;
   st = newState(1, currentLevel); st.parts = keepParts; st.pops = keepPops;
   (next >= 0 ? nextBtn : againBtn).focus({ preventScroll: true });
 }
 
-/* ---------- wardrobe ---------- */
-let wardView = null, wardT = 0;
+/* ---------- outfit unlocks on the end screen ---------- */
+function showUnlocks(fresh) {
+  endUnlock.hidden = !fresh.length;
+  if (!fresh.length) return;
+  const o = fresh[0];
+  endUnlock.querySelector('.unlock-k').textContent = SLOTS.find(sl => sl.id === o.slot).label;
+  unlockName.textContent = o.name;
+  unlockMore.textContent = fresh.length > 1 ? `And ${fresh.length - 1} more in the Wardrobe.` : o.unlock;
+  wearBtn.dataset.outfit = o.id; wearBtn.textContent = 'Wear it'; wearBtn.disabled = false;
+  drawOutfitCard(unlockCv, [o], { focus: o.slot === 'boots' ? 'feet' : o.slot === 'feathers' ? null : 'head' });
+  Snd.golden();
+}
+
+/* ---------- wardrobe: one of each slot, locked items greyed out ---------- */
+let wardT = 0;
 function openWardrobe() {
   startPanel.hidden = true; wardPanel.hidden = false;
-  const worn = wornOutfit();
-  wardView = worn || OUTFITS[0];
+  wardNote.textContent = 'Wear one of each. Hover or tap a greyed-out one to see how to earn it.';
   renderWardrobe();
-  const b = wardGrid.querySelector('[aria-pressed="true"]');
-  (b || wardDone).focus({ preventScroll: true });
+  wardDone.focus({ preventScroll: true });
 }
-function closeWardrobe() { wardPanel.hidden = true; showLevels(); }
-function renderWardrobe() {
-  const stats = loadStats(), worn = wornOutfit() || OUTFITS[0];
-  wardGrid.innerHTML = '';
-  for (const o of OUTFITS) {
-    const open = outfitOpen(o, stats);
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'ward-item' + (o === wardView ? ' viewing' : '');
-    b.setAttribute('aria-pressed', o === worn ? 'true' : 'false');
-    b.setAttribute('aria-label', open ? o.name : `${o.name}, locked. ${o.unlock}`);
-    const cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true');
-    b.appendChild(cv);
-    b.addEventListener('click', () => {
-      wardView = o;
-      if (open) { wearOutfit(o.id); Snd.init(); Snd.catchFish(3); }
-      renderWardrobe();
-      const again = wardGrid.children[OUTFITS.indexOf(o)];
-      if (again) again.focus({ preventScroll: true });
-    });
-    wardGrid.appendChild(b);
-    drawOutfitCard(cv, o, { locked: !open });
+function closeWardrobe() { wardTip.hidden = true; wardPanel.hidden = true; showLevels(); }
+const tileFocus = slot => (slot === 'boots' ? 'feet' : slot === 'feathers' ? null : 'head');
+
+function renderWardrobe(keepFocus) {
+  const stats = loadStats();
+  wardSlots.innerHTML = '';
+  for (const sl of SLOTS) {
+    const box = document.createElement('div'); box.className = 'ward-slot';
+    const h = document.createElement('h3'); h.textContent = sl.name; box.appendChild(h);
+    const grid = document.createElement('div'); grid.className = 'ward-grid';
+    grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', sl.name);
+    box.appendChild(grid); wardSlots.appendChild(box);          // in the page first, so tiles draw at their real size
+    const items = OUTFITS.filter(o => o.slot === sl.id), wornHere = items.find(o => isWorn(o) && outfitOpen(o, stats));
+    // "none" first, then each item
+    const none = document.createElement('button');
+    none.type = 'button'; none.className = 'ward-item none'; none.dataset.key = sl.id + ':none';
+    none.innerHTML = '<span>None</span>';
+    none.setAttribute('aria-pressed', wornHere ? 'false' : 'true');
+    none.setAttribute('aria-label', `No ${sl.name.toLowerCase()}`);
+    none.addEventListener('click', () => { takeOff(sl.id); renderWardrobe(none.dataset.key); });
+    tip(none, `No ${sl.name.toLowerCase()}`);
+    grid.appendChild(none);
+    for (const o of items) {
+      const open = outfitOpen(o, stats), worn = o === wornHere;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ward-item' + (open ? '' : ' locked'); b.dataset.key = o.id;
+      b.setAttribute('aria-pressed', worn ? 'true' : 'false');
+      b.setAttribute('aria-label', open ? o.name : `${o.name}, locked. To earn it: ${o.unlock}`);
+      const cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true'); b.appendChild(cv);
+      if (!open) b.insertAdjacentHTML('beforeend', '<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>');
+      b.addEventListener('click', () => {
+        if (!open) { wardNote.textContent = `${o.name}: ${o.unlock}`; showTip(b, `How to earn it: ${o.unlock}`, o.name); return; }
+        if (worn) takeOff(o.slot); else { wearOutfit(o.id); Snd.init(); Snd.catchFish(3); }
+        wardNote.textContent = worn ? `Took off the ${o.name.toLowerCase()}.` : `Wearing the ${o.name.toLowerCase()}.`;
+        renderWardrobe(b.dataset.key);
+      });
+      tip(b, open ? (worn ? 'Wearing it. Tap to take it off.' : 'Tap to wear it.') : `How to earn it: ${o.unlock}`, o.name);
+      grid.appendChild(b);
+      drawOutfitCard(cv, [o], { locked: !open, focus: tileFocus(o.slot) });
+    }
   }
-  const open = outfitOpen(wardView, stats);
-  wardName.textContent = open ? wardView.name : `${wardView.name} (locked)`;
-  wardNote.textContent = !open ? wardView.unlock : wardView === worn ? 'Wearing it.' : 'Tap to wear it.';
+  wardTip.hidden = true;
+  if (keepFocus) { const b = wardSlots.querySelector(`[data-key="${keepFocus}"]`); if (b) b.focus({ preventScroll: true }); }
 }
+
+// A tooltip over a tile, on hover or keyboard focus, kept inside the panel
+function tip(el, text, title) {
+  const show = () => showTip(el, text, title), hide = () => { wardTip.hidden = true; };
+  el.addEventListener('pointerenter', show); el.addEventListener('focus', show);
+  el.addEventListener('pointerleave', hide); el.addEventListener('blur', hide);
+}
+function showTip(el, text, title) {
+  wardTip.innerHTML = '';
+  if (title) { const t = document.createElement('strong'); t.textContent = title; wardTip.appendChild(t); }
+  wardTip.appendChild(document.createTextNode(text));
+  wardTip.hidden = false;
+  const pr = wardPanel.getBoundingClientRect(), r = el.getBoundingClientRect();
+  const tw = wardTip.offsetWidth, th = wardTip.offsetHeight;
+  const left = clamp(r.left - pr.left + r.width / 2 - tw / 2, 8, pr.width - tw - 8);
+  wardTip.style.left = left + 'px';
+  wardTip.style.top = (r.top - pr.top + wardPanel.scrollTop - th - 8) + 'px';
+}
+
 function drawWardrobe(dt) {
-  if (wardPanel.hidden || !wardView) return;
+  if (wardPanel.hidden) return;
   wardT += dt;
-  drawOutfitCard(wardCv, wardView, { scene: true, t: wardT, locked: !outfitOpen(wardView) });
+  drawOutfitCard(wardCv, wornLook(), { scene: true, t: wardT });
 }
 
 function frame(now) {

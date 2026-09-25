@@ -1,6 +1,7 @@
-/* Outfits: looks only, earned by playing, one worn at a time. None of them changes how the
-   puffin plays. Each has an unlock test on lifetime stats, and draws in the head's own
-   coordinates (head centre 14,-6, radius about 9, bill pointing right), so it follows the puffin
+/* Outfits: looks only, earned by playing. There are five slots (hats, glasses, scarves &
+   necklaces, boots, feathers) and the puffin can wear one of each. None changes how the puffin
+   plays. Each item has an unlock test on lifetime stats. Head items draw in the head's own
+   coordinates (head centre 14,-6, radius about 9, bill pointing right), so they follow the puffin
    through every pose: flying, swimming, crash-landing and standing. Add one by adding an entry. */
 
 const TARTAN = { green: '#1f6b3a', gold: '#e3b23c', white: '#f3f3ee', brown: '#6b4a2b', red: '#b8282e' };
@@ -35,29 +36,33 @@ function drawToque() {                          // knitted red toque with a whit
   ctx.fillStyle = 'rgba(160,170,180,0.5)'; ell(15, -22.8, 1.2, 1);
 }
 
-function drawTartanScarf() {                    // Newfoundland tartan, one end streaming behind
+// A scarf wrapped round the neck, one end streaming behind. pattern(x0, x1, y0, y1) paints the cloth.
+function drawScarf(base, pattern) {
   const t = st.anim || 0, w1 = Math.sin(t * 9) * 1.6, w2 = Math.sin(t * 9 + 1.3) * 2;
-  const stripes = (x0, x1, y0, y1) => {
-    ctx.fillStyle = TARTAN.gold; ctx.fillRect(x0, y0 + (y1 - y0) * 0.35, x1 - x0, (y1 - y0) * 0.14);
-    ctx.fillStyle = TARTAN.red; ctx.fillRect(x0, y0 + (y1 - y0) * 0.62, x1 - x0, (y1 - y0) * 0.1);
-    ctx.fillStyle = TARTAN.white;
-    for (let x = x0 + 1.5; x < x1; x += 4.2) ctx.fillRect(x, y0, 0.8, y1 - y0);
-    ctx.fillStyle = TARTAN.brown;
-    for (let x = x0 + 3.4; x < x1; x += 4.2) ctx.fillRect(x, y0, 0.6, y1 - y0);
-  };
   ctx.save();                                                        // the tail, fluttering back
   ctx.beginPath(); ctx.moveTo(7, 0.5); ctx.quadraticCurveTo(-1, 2 + w1, -9, 1.5 + w2); ctx.lineTo(-9.5, 5.5 + w2);
   ctx.quadraticCurveTo(-1, 6 + w1, 7, 5); ctx.closePath();
-  ctx.fillStyle = TARTAN.green; ctx.fill(); ctx.clip(); stripes(-12, 8, 0, 7 + Math.abs(w2));
+  ctx.fillStyle = base; ctx.fill(); ctx.clip(); pattern(-12, 8, -1, 8 + Math.abs(w2));
   ctx.restore();
-  ctx.fillStyle = TARTAN.white;                                      // fringe
+  ctx.fillStyle = '#f3f3ee';                                         // fringe
   for (let i = 0; i < 3; i++) ctx.fillRect(-11.5, 2 + w2 + i * 1.3, 2.2, 0.5);
   ctx.save();                                                        // wrapped round the neck
   ctx.beginPath(); ctx.moveTo(5.5, -0.2); ctx.quadraticCurveTo(14, 2.2, 21.5, -0.8); ctx.lineTo(22, 3.6);
   ctx.quadraticCurveTo(14, 7, 5, 4.4); ctx.closePath();
-  ctx.fillStyle = TARTAN.green; ctx.fill(); ctx.clip(); stripes(4, 23, -1, 7);
+  ctx.fillStyle = base; ctx.fill(); ctx.clip(); pattern(4, 23, -1, 7);
   ctx.restore();
 }
+const drawTartanScarf = () => drawScarf(TARTAN.green, (x0, x1, y0, y1) => {   // Newfoundland tartan
+  ctx.fillStyle = TARTAN.gold; ctx.fillRect(x0, y0 + (y1 - y0) * 0.35, x1 - x0, (y1 - y0) * 0.14);
+  ctx.fillStyle = TARTAN.red; ctx.fillRect(x0, y0 + (y1 - y0) * 0.62, x1 - x0, (y1 - y0) * 0.1);
+  ctx.fillStyle = TARTAN.white; for (let x = x0 + 1.5; x < x1; x += 4.2) ctx.fillRect(x, y0, 0.8, y1 - y0);
+  ctx.fillStyle = TARTAN.brown; for (let x = x0 + 3.4; x < x1; x += 4.2) ctx.fillRect(x, y0, 0.6, y1 - y0);
+});
+const drawTricolourScarf = () => drawScarf('#f3f3ee', (x0, x1, y0, y1) => {  // the old Newfoundland pink, white and green
+  const h = (y1 - y0) / 3;
+  ctx.fillStyle = '#f19cbb'; ctx.fillRect(x0, y0, x1 - x0, h);
+  ctx.fillStyle = '#3f8f4f'; ctx.fillRect(x0, y0 + 2 * h, x1 - x0, h + 1);
+});
 
 function drawSunglasses() {
   ctx.strokeStyle = '#11151b'; ctx.lineWidth = 0.9; ctx.lineCap = 'round';
@@ -66,6 +71,28 @@ function drawSunglasses() {
   ctx.beginPath(); ctx.moveTo(15, -8.6); ctx.lineTo(21.4, -8.6); ctx.quadraticCurveTo(21.6, -4.2, 18.2, -4.2); ctx.quadraticCurveTo(15, -4.4, 15, -8.6); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 0.6;
   ctx.beginPath(); ctx.moveTo(16.4, -7.6); ctx.lineTo(18.2, -5.4); ctx.stroke();
+}
+
+function drawReadingGlasses() {                 // Nan's: round gold wire rims, and a chain so they're never lost
+  ctx.strokeStyle = '#b88a2e'; ctx.lineWidth = 0.7; ctx.lineCap = 'round';
+  ctx.fillStyle = 'rgba(220,235,245,0.35)';
+  ctx.beginPath(); ctx.arc(18.4, -6.2, 2.9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(15.5, -6.8); ctx.lineTo(7, -7.6); ctx.moveTo(21.3, -6.6); ctx.lineTo(22.4, -7.2); ctx.stroke();
+  ctx.strokeStyle = 'rgba(184,138,46,0.8)'; ctx.lineWidth = 0.45; ctx.setLineDash([0.6, 0.7]);
+  ctx.beginPath(); ctx.moveTo(7, -7.4); ctx.quadraticCurveTo(7, 2, 13, 2.2); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.arc(18.4, -6.2, 1.8, -2.4, -1.5); ctx.stroke();
+}
+
+function drawGoggles() {                        // ski goggles: a strap round the head and one big mirrored lens
+  ctx.fillStyle = '#10233d';
+  ctx.beginPath(); ctx.moveTo(4.8, -9.4); ctx.quadraticCurveTo(12, -10.8, 16, -9.6); ctx.lineTo(16, -6.4); ctx.quadraticCurveTo(12, -7.4, 5, -6.2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#f94a18'; ctx.fillRect(5.5, -8.4, 10, 0.9);
+  ctx.fillStyle = '#f7f8f6'; ell(18.8, -7.2, 4.4, 3.6);
+  const g = ctx.createLinearGradient(15, -10, 22, -4);
+  g.addColorStop(0, '#feb445'); g.addColorStop(0.5, '#f94a18'); g.addColorStop(1, '#7b4fa3');
+  ctx.fillStyle = g; ell(18.9, -7.2, 3.5, 2.7);
+  ctx.fillStyle = 'rgba(255,255,255,0.65)'; ell(17.6, -8.3, 1.2, 0.6, -0.4);
 }
 
 function drawPitcherCrown() {                   // a ring of pitcher plants, the provincial flower
@@ -128,29 +155,58 @@ function drawMummer() {                         // lace veil over the face and a
   ctx.fillStyle = '#feb445'; ell(14.5, -25, 1.6, 1.6);
 }
 
-// Rubber boots replace the feet: drawn by puffinFoot while they're worn
-function drawBoot(fx, fy, s) {
-  ctx.fillStyle = '#1b1f26';
-  ctx.beginPath(); ctx.moveTo(fx - 2.4 * s, fy + 1.9 * s); ctx.lineTo(fx - 2.2 * s, fy - 5 * s); ctx.lineTo(fx + 1.8 * s, fy - 5 * s);
+// Boots replace the feet: drawn by puffinFoot while they're worn (o.boot is the style)
+function drawBoot(fx, fy, s, style) {
+  const B = BOOTS[style] || BOOTS.rubber;
+  ctx.fillStyle = B.body;
+  ctx.beginPath(); ctx.moveTo(fx - 2.4 * s, fy + 1.9 * s); ctx.lineTo(fx - 2.2 * s, fy - B.tall * s); ctx.lineTo(fx + 1.8 * s, fy - B.tall * s);
   ctx.lineTo(fx + 2 * s, fy - 1.2 * s); ctx.quadraticCurveTo(fx + 6.8 * s, fy - 1, fx + 6.6 * s, fy + 1.9 * s); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#dc362c'; ctx.fillRect(fx - 2.7 * s, fy - 6.2 * s, 5 * s, 1.8 * s);
-  ctx.fillStyle = '#5a616c'; ctx.fillRect(fx - 2.4 * s, fy + 1.4 * s, 9 * s, 0.6 * s);
+  if (B.knit) {                                                       // ribbing, and a coloured toe
+    ctx.strokeStyle = B.knit; ctx.lineWidth = 0.35 * s;
+    ctx.beginPath(); for (let i = 0; i < 4; i++) { const x = fx - 1.6 * s + i * 0.95 * s; ctx.moveTo(x, fy - (B.tall - 0.4) * s); ctx.lineTo(x, fy - 0.5 * s); } ctx.stroke();
+    ctx.fillStyle = B.toe; ctx.beginPath(); ctx.moveTo(fx + 3.6 * s, fy - 0.9 * s); ctx.quadraticCurveTo(fx + 6.8 * s, fy - 0.8, fx + 6.6 * s, fy + 1.9 * s); ctx.lineTo(fx + 3.4 * s, fy + 1.9 * s); ctx.closePath(); ctx.fill();
+  }
+  ctx.fillStyle = B.rim; ctx.fillRect(fx - 2.7 * s, fy - (B.tall + 1.2) * s, 5 * s, 1.8 * s);
+  if (B.sole) { ctx.fillStyle = B.sole; ctx.fillRect(fx - 2.4 * s, fy + 1.3 * s, 9 * s, 0.7 * s); }
 }
+const BOOTS = {
+  rubber: { body: '#1b1f26', rim: '#dc362c', sole: '#5a616c', tall: 5 },
+  vamps: { body: '#e9e2d0', rim: '#b8282e', toe: '#b8282e', knit: 'rgba(120,105,80,0.45)', tall: 4 },
+  yellow: { body: '#f2b134', rim: '#c98a14', sole: '#6b4a2b', tall: 6.5 }
+};
+
+const SLOTS = [
+  { id: 'hat', name: 'Hats', label: 'New hat' },
+  { id: 'glasses', name: 'Glasses', label: 'New glasses' },
+  { id: 'neck', name: 'Scarves & necklaces', label: 'New for your neck' },
+  { id: 'boots', name: 'Boots', label: 'New boots' },
+  { id: 'feathers', name: 'Feathers', label: 'New feathers' }
+];
 
 const OUTFITS = [
-  { id: 'none', name: 'Just a puffin', unlock: 'Always yours.', has: () => true },
-  { id: 'souwester', name: 'Sou’wester', unlock: 'Finish Baccalieu Tickle.', has: s => s.done.includes('baccalieu-tickle'), head: drawSouwester },
-  { id: 'toque', name: 'Knitted toque', unlock: 'Finish Iceberg Alley.', has: s => s.done.includes('iceberg-alley'), head: drawToque },
-  { id: 'tartan', name: 'Newfoundland tartan scarf', unlock: 'Deliver a full 12-fish stack.', has: s => s.bigDrop >= MAX_STACK, head: drawTartanScarf },
-  { id: 'boots', name: 'Rubber boots', unlock: 'Deliver 250 capelin in all.', has: s => s.fish >= 250, boots: true },
-  { id: 'shades', name: 'Sunglasses', unlock: 'Score 5,000 on Trinity Bay.', has: () => bestFor(LEVELS.find(l => l.id === 'trinity-bay')) >= 5000, head: drawSunglasses },
-  { id: 'crown', name: 'Pitcher plant crown', unlock: 'Grow your puffling to full size in one run.', has: s => s.fullGrown, head: drawPitcherCrown },
-  { id: 'horseshoe', name: 'Lucky horseshoe', unlock: 'Save your puffling at the last second 5 times.', has: s => s.saves >= 5, head: drawHorseshoe },
-  { id: 'captain', name: 'Captain’s cap', unlock: 'Finish Funk Island.', has: s => s.done.includes('funk-island'), head: drawCaptainsCap },
-  { id: 'golden', name: 'Golden puffin', unlock: 'Catch 50 golden capelin in all.', has: s => s.gold >= 50,
-    colors: { back: '#b8862b', far: '#8f6519', face: '#fbf1d4', belly: '#fff6df' } },
-  { id: 'mummer', name: 'Mummer', unlock: 'Finish all seven levels.', has: s => LEVELS.every(l => s.done.includes(l.id)), head: drawMummer }
+  // hats
+  { id: 'souwester', slot: 'hat', name: 'Sou\u2019wester', unlock: 'Finish Baccalieu Tickle.', has: s => s.done.includes('baccalieu-tickle'), draw: drawSouwester },
+  { id: 'toque', slot: 'hat', name: 'Knitted toque', unlock: 'Finish Iceberg Alley.', has: s => s.done.includes('iceberg-alley'), draw: drawToque },
+  { id: 'crown', slot: 'hat', name: 'Pitcher plant crown', unlock: 'Grow your puffling to full size in one run.', has: s => s.fullGrown, draw: drawPitcherCrown },
+  { id: 'captain', slot: 'hat', name: 'Captain\u2019s cap', unlock: 'Finish Funk Island.', has: s => s.done.includes('funk-island'), draw: drawCaptainsCap },
+  { id: 'mummer', slot: 'hat', name: 'Mummer', unlock: 'Finish all seven levels.', has: s => LEVELS.every(l => s.done.includes(l.id)), draw: drawMummer },
+  // glasses
+  { id: 'reading', slot: 'glasses', name: 'Nan\u2019s reading glasses', unlock: 'Finish How to play.', has: s => s.tutorial, draw: drawReadingGlasses },
+  { id: 'shades', slot: 'glasses', name: 'Sunglasses', unlock: 'Score 5,000 on Trinity Bay.', has: () => bestFor(LEVELS.find(l => l.id === 'trinity-bay')) >= 5000, draw: drawSunglasses },
+  { id: 'goggles', slot: 'glasses', name: 'Ski goggles', unlock: 'Make 100 deliveries in all.', has: s => s.deliveries >= 100, draw: drawGoggles },
+  // scarves & necklaces
+  { id: 'tricolour', slot: 'neck', name: 'Pink, white and green scarf', unlock: 'Finish Capelin Scull.', has: s => s.done.includes('capelin-scull'), draw: drawTricolourScarf },
+  { id: 'tartan', slot: 'neck', name: 'Newfoundland tartan scarf', unlock: 'Deliver a full 12-fish stack.', has: s => s.bigDrop >= MAX_STACK, draw: drawTartanScarf },
+  { id: 'horseshoe', slot: 'neck', name: 'Lucky horseshoe', unlock: 'Save your puffling at the last second 5 times.', has: s => s.saves >= 5, draw: drawHorseshoe },
+  // boots
+  { id: 'boots', slot: 'boots', name: 'Rubber boots', unlock: 'Deliver 250 capelin in all.', has: s => s.fish >= 250, boot: 'rubber' },
+  { id: 'vamps', slot: 'boots', name: 'Knitted vamps', unlock: 'Play 20 runs.', has: s => s.runs >= 20, boot: 'vamps' },
+  { id: 'fisherman', slot: 'boots', name: 'Fisherman\u2019s boots', unlock: 'Finish Cape St. Mary\u2019s.', has: s => s.done.includes('cape-st-marys'), boot: 'yellow' },
+  // feathers
+  { id: 'golden', slot: 'feathers', name: 'Golden puffin', unlock: 'Catch 50 golden capelin in all.', has: s => s.gold >= 50,
+    colors: { back: '#b8862b', far: '#8f6519', face: '#fbf1d4', belly: '#fff6df' } }
 ];
+const HEAD_ORDER = ['neck', 'glasses', 'hat'];     // drawn in this order, so a hat sits over glasses' arms
 
 /* ---------- lifetime stats and what's unlocked (saved in the browser, like best scores) ---------- */
 const STATS_KEY = 'capelin-run-stats', OUTFIT_KEY = 'capelin-run-outfit', SEEN_KEY = 'capelin-run-outfits-seen';
@@ -161,37 +217,59 @@ function loadStats() {
   const done = Array.isArray(s.done) ? s.done.slice() : [];
   // levels finished before outfits existed: every level below the unlocked one was finished
   for (const l of LEVELS.slice(0, unlockedUpTo())) if (!done.includes(l.id)) done.push(l.id);
-  return { fish: s.fish || 0, gold: s.gold || 0, saves: s.saves || 0, bigDrop: s.bigDrop || 0, fullGrown: !!s.fullGrown, done };
+  return { fish: s.fish || 0, gold: s.gold || 0, saves: s.saves || 0, bigDrop: s.bigDrop || 0, fullGrown: !!s.fullGrown,
+    runs: s.runs || 0, deliveries: s.deliveries || 0, tutorial: tutorialDone(), done };
 }
 
 const outfitEarned = (o, s = loadStats()) => !!o.has(s);
 const outfitOpen = (o, s) => UNLOCK_ALL || store.get('capelin-run-outfits-all') === '1' || outfitEarned(o, s);
 
-// Called at the end of every run. Returns outfits earned for the first time.
+// Called at the end of every run (run is null after the tutorial). Returns items earned for the first time.
 function recordRun(run, complete) {
   const s = loadStats();
-  s.fish += run.fishDelivered; s.gold += run.goldCaught; s.saves += run.saves;
-  s.bigDrop = Math.max(s.bigDrop, run.bestDrop);
-  s.fullGrown = s.fullGrown || run.fedFish >= GROW_FISH;
-  if (complete && !s.done.includes(run.level.id)) s.done.push(run.level.id);
-  store.set(STATS_KEY, JSON.stringify(s));
+  if (run) {
+    s.runs++; s.deliveries += run.deliveries;
+    s.fish += run.fishDelivered; s.gold += run.goldCaught; s.saves += run.saves;
+    s.bigDrop = Math.max(s.bigDrop, run.bestDrop);
+    s.fullGrown = s.fullGrown || run.fedFish >= GROW_FISH;
+    if (complete && !s.done.includes(run.level.id)) s.done.push(run.level.id);
+  }
+  const { tutorial, ...keep } = s;
+  store.set(STATS_KEY, JSON.stringify(keep));
   let seen = [];
   try { seen = JSON.parse(store.get(SEEN_KEY) || '[]') || []; } catch (e) { seen = []; }
-  const fresh = OUTFITS.filter(o => o.id !== 'none' && !seen.includes(o.id) && outfitEarned(o, s));
+  const fresh = OUTFITS.filter(o => !seen.includes(o.id) && outfitEarned(o, s));
   if (fresh.length) store.set(SEEN_KEY, JSON.stringify(seen.concat(fresh.map(o => o.id))));
   return fresh;
 }
 
-function wornOutfit() {
-  const o = OUTFITS.find(x => x.id === store.get(OUTFIT_KEY));
-  return o && o.id !== 'none' && outfitOpen(o) ? o : null;
+// What's worn: one item id per slot. (Before slots, a single outfit id was stored; it moves to its slot.)
+function wornIds() {
+  const raw = store.get(OUTFIT_KEY);
+  let ids = {};
+  try { ids = JSON.parse(raw || '{}') || {}; } catch (e) { const o = OUTFITS.find(x => x.id === raw); if (o) ids = { [o.slot]: o.id }; }
+  return typeof ids === 'object' ? ids : {};
 }
-function wearOutfit(id) { store.set(OUTFIT_KEY, id); }
+// The items worn right now, skipping any that aren't unlocked
+function wornLook() {
+  const ids = wornIds(), stats = loadStats();
+  return SLOTS.map(sl => OUTFITS.find(o => o.id === ids[sl.id] && o.slot === sl.id)).filter(o => o && outfitOpen(o, stats));
+}
+const isWorn = o => wornIds()[o.slot] === o.id;
+function wearOutfit(id) {
+  const o = OUTFITS.find(x => x.id === id); if (!o) return;
+  store.set(OUTFIT_KEY, JSON.stringify({ ...wornIds(), [o.slot]: o.id }));
+}
+function takeOff(slot) {
+  const ids = wornIds(); delete ids[slot];
+  store.set(OUTFIT_KEY, JSON.stringify(ids));
+}
 
 /* ---------- drawing outfits on small canvases (wardrobe, unlock card) ---------- */
 let outfitLayer = null;                              // the puffin is drawn here first, so a locked one can be a silhouette
 // A standing puffin, wearing the outfit, optionally on a little rock by the sea.
-function drawOutfitCard(cv, o, opts = {}) {
+// look: the items to wear. opts.focus zooms in on the 'head' or 'feet' for small tiles.
+function drawOutfitCard(cv, look, opts = {}) {
   const r = cv.getBoundingClientRect();
   const w = r.width || 60, h = r.height || 60, d = Math.min(window.devicePixelRatio || 1, 2);
   const W2 = Math.round(w * d), H2 = Math.round(h * d);
@@ -203,11 +281,16 @@ function drawOutfitCard(cv, o, opts = {}) {
     ctx = outfitLayer.getContext('2d');
     ctx.setTransform(d, 0, 0, d, 0, 0); ctx.clearRect(0, 0, w, h);
     // a standing puffin in a tall hat is about 58 units from pom-pom to toes
-    const feetY = opts.scene ? h * 0.76 : h * 0.93, sc = opts.scale || (feetY - 4) / 60, bob = opts.t ? Math.sin(opts.t * 2.2) * 0.6 : 0;
-    drawPuffin(w * 0.44, feetY - 18.2 * sc + bob, sc, UPRIGHT, { stand: 1, outfit: o.id === 'none' ? null : o, beak: [] });
+    const bob = opts.t ? Math.sin(opts.t * 2.2) * 0.6 : 0;
+    let x, y, sc;
+    // head and hat span about x -8..23, y -35..-5 around the standing puffin's origin; boots about y 10..20
+    if (opts.focus === 'head') { sc = h / 44; x = w / 2 - 6 * sc; y = h / 2 + 17 * sc; }
+    else if (opts.focus === 'feet') { sc = h / 26; x = w / 2 + 1 * sc; y = h / 2 - 14 * sc; }
+    else { const feetY = opts.scene ? h * 0.76 : h * 0.93; sc = opts.scale || (feetY - 4) / 60; x = w * 0.44; y = feetY - 18.2 * sc; }
+    drawPuffin(x, y + bob, sc, UPRIGHT, { stand: 1, look, beak: [] });
     if (opts.locked) {
       ctx.globalCompositeOperation = 'source-atop';
-      ctx.fillStyle = 'rgba(40,52,70,0.92)'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(138,147,159,0.95)'; ctx.fillRect(0, 0, w, h);   // greyed out
       ctx.globalCompositeOperation = 'source-over';
     }
     ctx = cv.getContext('2d');

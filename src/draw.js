@@ -9,10 +9,10 @@ const PUF = {
   beak: '#f94a18', band: '#feb445', plate: '#6b7c90', foot: '#f94a18', ring: '#dc362c'
 };
 
-let curOutfit = null;                            // the outfit being drawn right now (see drawPuffin)
+let curLook = null;                              // what the puffin being drawn is wearing (see drawPuffin)
 
 function puffinFoot(fx, fy, s) {                  // a webbed foot, toes pointing forward
-  if (curOutfit && curOutfit.boots) { drawBoot(fx, fy, s); return; }
+  if (curLook && curLook.boot) { drawBoot(fx, fy, s, curLook.boot); return; }
   ctx.beginPath();
   ctx.moveTo(fx - 2 * s, fy);
   ctx.quadraticCurveTo(fx + 3 * s, fy - 2.2 * s, fx + 7 * s, fy + 0.2 * s);
@@ -72,18 +72,19 @@ function puffinHead(beak) {
   ctx.strokeStyle = 'rgba(110,30,8,0.55)'; ctx.lineWidth = 0.6;                   // mouth line
   ctx.beginPath(); ctx.moveTo(21.5, -5.2); ctx.lineTo(33.6, -4.6); ctx.stroke();
   ctx.fillStyle = PUF.band; ell(21.4, -4.6, 1.3, 1.1);                             // rosette at the gape
-  if (curOutfit && curOutfit.head) curOutfit.head();                              // hat, scarf, glasses...
+  if (curLook) for (const o of curLook.head) o.draw();                           // scarf, glasses, hat
 }
 
-// o.me: the player's puffin, which wears the chosen outfit. o.outfit: wear this one instead (previews).
-// Outfits only change the look: colours, feet, and something drawn with the head.
+// o.me: the player's puffin, which wears what's chosen in the wardrobe. o.look: wear these items
+// instead (previews). Outfits only change the look: feather colours, boots, and things worn on the head.
 function drawPuffin(x, y, sc, ang, o) {
-  const outfit = o.outfit !== undefined ? o.outfit : (o.me ? wornOutfit() : null);
-  if (!outfit) { drawPuffinPose(x, y, sc, ang, o); return; }
-  const keep = { ...PUF };
-  Object.assign(PUF, outfit.colors || {}, outfit.boots ? { foot: '#1b1f26' } : {});
-  curOutfit = outfit;
-  try { drawPuffinPose(x, y, sc, ang, o); } finally { Object.assign(PUF, keep); curOutfit = null; }
+  const look = o.look !== undefined ? o.look : (o.me ? wornLook() : null);
+  if (!look || !look.length) { drawPuffinPose(x, y, sc, ang, o); return; }
+  const keep = { ...PUF }, boots = look.find(i => i.boot);
+  for (const i of look) if (i.colors) Object.assign(PUF, i.colors);
+  if (boots) PUF.foot = BOOTS[boots.boot].body;                  // legs and trailing feet in flight
+  curLook = { boot: boots && boots.boot, head: HEAD_ORDER.map(sl => look.find(i => i.slot === sl && i.draw)).filter(Boolean) };
+  try { drawPuffinPose(x, y, sc, ang, o); } finally { Object.assign(PUF, keep); curLook = null; }
 }
 
 function drawPuffinPose(x, y, sc, ang, o) {
@@ -156,7 +157,7 @@ function drawPuffinStanding(x, y, sc, lean, o) {
       puffinFoot(dx - 0.5, 18.2 - up, 1);
     }
   };
-  const boots = curOutfit && curOutfit.boots;
+  const boots = curLook && curLook.boot;
   if (!boots) legs();                              // boots go on last, over the bottom of the belly
   ctx.save();
   // the body pivots over its feet

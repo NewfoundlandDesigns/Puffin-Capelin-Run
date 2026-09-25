@@ -40,7 +40,7 @@ Object.assign(globalThis, {
   requestAnimationFrame: cb => { raf = cb; },
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 }
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, loadStats, outfitEarned, recordRun, wearOutfit, wornOutfit };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds };');
 const T = globalThis.__T;
 const SEA = 270;
 
@@ -100,17 +100,17 @@ for (let i = 0; i < T.LEVELS.length; i++) {
 }
 
 // 2b. Outfits: finishing every level is recorded, and earns the level outfits and the mummer
+const noRun = { level: T.LEVELS[0], deliveries: 0, fishDelivered: 0, goldCaught: 0, saves: 0, bestDrop: 0, fedFish: 0 };
 {
   const stats = T.loadStats(), earned = id => T.outfitEarned(T.OUTFITS.find(o => o.id === id), stats);
   check('finished levels are recorded', T.LEVELS.every(l => stats.done.includes(l.id)), stats.done.join(', '));
-  check('level outfits unlock', ['souwester', 'toque', 'captain', 'mummer'].every(earned));
-  check('stat outfits stay locked until earned', !earned('boots') && !earned('golden') && !earned('horseshoe'));
-  const again = T.recordRun({ level: T.LEVELS[0], fishDelivered: 0, goldCaught: 0, saves: 0, bestDrop: 0, fedFish: 0 }, true);
-  check('an outfit is only announced once', again.length === 0);
-  const got = T.recordRun({ level: T.LEVELS[0], fishDelivered: 300, goldCaught: 0, saves: 0, bestDrop: 12, fedFish: 0 }, false);
-  check('lifetime totals unlock outfits', got.map(o => o.id).sort().join() === 'boots,tartan', got.map(o => o.id).join());
+  check('level outfits unlock', ['tricolour', 'souwester', 'fisherman', 'toque', 'captain', 'mummer'].every(earned));
+  check('stat outfits stay locked until earned', !earned('boots') && !earned('golden') && !earned('horseshoe') && !earned('reading'));
+  check('an outfit is only announced once', T.recordRun(noRun, true).length === 0);
+  const got = T.recordRun({ ...noRun, fishDelivered: 300, bestDrop: 12, deliveries: 100 }, false);
+  check('lifetime totals unlock outfits', got.map(o => o.id).sort().join() === 'boots,goggles,tartan', got.map(o => o.id).join());
 }
-// 2c. Every outfit draws in flight, underwater, landing and standing without errors
+// 2c. One of each slot, and every item draws in flight, underwater, landing and standing
 {
   let ok = true;
   for (const o of T.OUTFITS) {
@@ -123,12 +123,21 @@ for (let i = 0; i < T.LEVELS.length; i++) {
     } catch (e) { ok = false; console.log('  ', o.id, e.message); }
   }
   check('every outfit draws in every pose', ok);
-  check('the chosen outfit is worn', T.wornOutfit() && T.wornOutfit().id === T.OUTFITS[T.OUTFITS.length - 1].id);
-  T.wearOutfit('none');
+  const look = T.wornLook();
+  check('one of each slot is worn at once', look.length === T.SLOTS.length && T.SLOTS.every(sl => look.some(o => o.slot === sl.id)), look.map(o => o.id).join());
+  T.wearOutfit('souwester');
+  check('wearing a hat swaps the hat only', T.wornIds().hat === 'souwester' && T.wornLook().length === T.SLOTS.length);
+  T.takeOff('hat');
+  check('taking off a hat leaves the rest', !T.wornIds().hat && T.wornLook().length === T.SLOTS.length - 1);
+  localStorage.setItem('capelin-run-outfit', 'captain');             // saved before slots existed
+  check('an outfit saved before slots still works', T.wornIds().hat === 'captain');
+  for (const sl of T.SLOTS) T.takeOff(sl.id);
 }
-// 2d. The wardrobe opens with every outfit, and closes back to the level picker
+// 2d. The wardrobe shows a row per slot with a "none" tile, and closes back to the level picker
 els.wardBtn.onclick();
-check('wardrobe shows every outfit', !els.wardPanel.hidden && els.wardGrid.children.length === T.OUTFITS.length);
+const rows = els.wardSlots.children;
+check('wardrobe shows a row per slot', !els.wardPanel.hidden && rows.length === T.SLOTS.length);
+check('each row has none plus its items', T.SLOTS.every((sl, i) => rows[i].children[1].children.length === 1 + T.OUTFITS.filter(o => o.slot === sl.id).length));
 els.wardDone.onclick();
 check('wardrobe closes to the level picker', els.wardPanel.hidden && !els.startPanel.hidden);
 
@@ -196,6 +205,7 @@ for (let f = 0; f < 60 * 200 && T.running; f++) {
 }
 hold(false);
 check('tutorial completes', els.endTitle.textContent === "You're ready", els.endTitle.textContent);
+check('finishing the tutorial earns the reading glasses', els.unlockName.textContent.includes('reading glasses'), els.unlockName.textContent);
 
 const failed = results.filter(r => !r).length;
 console.log(failed ? `\n${failed} failed` : `\nAll ${results.length} passed`);
