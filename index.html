@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fun Puffin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+<main id="stage" aria-label="Fun Puffin game">
+  <canvas id="game" aria-hidden="true"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="progress" aria-hidden="true">
+      <div class="prog-fill" id="progFill"></div>
+      <svg class="prog-home" viewBox="0 0 16 20"><path d="M3 20V2" stroke="#fff" stroke-width="2"/><path d="M3 2q6 1 12 4-6 3-12 4z" fill="#f94a18"/></svg>
+      <div class="prog-mark" id="progMark">
+        <svg viewBox="0 0 30 20"><ellipse cx="12" cy="11" rx="10" ry="7" fill="#10233d"/><ellipse cx="13.5" cy="13.5" rx="7" ry="4" fill="#edf1f6"/><circle cx="19" cy="7" r="5.5" fill="#10233d"/><circle cx="20" cy="7.5" r="3.4" fill="#dfe6ee"/><circle cx="20.6" cy="6.6" r="1" fill="#10233d"/><path d="M24 4.5 30 7.5 24 10z" fill="#f94a18"/></svg>
+      </div>
+    </div>
+    <div class="hud-row">
+      <div class="stat"><span class="k">Score</span><span id="hScore" class="v">0</span></div>
+      <div class="stat mid"><span class="k">In beak</span><span id="hBeak" class="v">0</span></div>
+      <div class="stat right">
+        <span class="k">Puffling</span>
+        <div class="hunger" id="hunger">
+          <svg class="chick" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="8.5" cy="5.5" r="2.4" fill="#8a939f"/><circle cx="12" cy="4.4" r="2.4" fill="#8a939f"/><circle cx="15.5" cy="5.5" r="2.4" fill="#8a939f"/>
+            <circle cx="12" cy="13" r="9" fill="#8a939f"/><ellipse cx="12" cy="17" rx="5.5" ry="4.2" fill="#edf1f6"/>
+            <circle cx="9" cy="11" r="1.4" fill="#10233d"/><circle cx="15" cy="11" r="1.4" fill="#10233d"/>
+            <path d="M10.4 13.2 12 15.6 13.6 13.2z" fill="#2a2f38"/>
+            <path class="brows" d="M6.8 8.2 10 9.6M17.2 8.2 14 9.6" stroke="#10233d" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="hbar"><div class="hfill" id="hFill"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tut" id="tut" hidden>
+    <div class="tut-card" id="tutCard" role="status" aria-live="polite">
+      <div class="tut-top"><span id="tutStep">Step 1</span><button class="tut-skip" id="tutSkip" type="button">Skip tutorial</button></div>
+      <h3 id="tutTitle"></h3>
+      <p id="tutText"></p>
+      <p class="tut-hint" id="tutHint" hidden></p>
+      <div class="tut-time"><div id="tutTimer"></div></div>
+    </div>
+  </div>
+
+  <section class="panel" id="startPanel">
+    <h1>Fun Puffin</h1>
+    <p class="lede">Hold to dive. Let go to rise.</p>
+    <p class="small">Your puffling is hungry. Stack capelin in your beak and deliver them to burrows along the way to keep it fed, and make it home by nightfall. Bigger stacks score more; golden capelin count double.</p>
+    <div class="picker">
+      <div class="preview" id="preview">
+        <canvas id="pvCanvas" aria-hidden="true"></canvas>
+        <div class="pv-label"><span id="pvNum">Level 1</span><strong id="pvName">Capelin Scull</strong></div>
+        <span class="pv-best" id="pvBest" hidden></span>
+        <span class="pv-lock" id="pvLock" hidden></span>
+      </div>
+      <p class="pv-blurb" id="pvBlurb"></p>
+      <div class="slider" role="group" aria-label="Choose a level">
+        <button class="nav" id="prevLv" type="button" aria-label="Previous level">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg>
+        </button>
+        <div class="dots" id="lvDots"></div>
+        <button class="nav" id="nextLv" type="button" aria-label="Next level">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+      <button class="primary play" id="playBtn" type="button">Play</button>
+      <button class="secondary how" id="howBtn" type="button">How to play</button>
+    </div>
+    <p class="keys">Hold with mouse, finger, or space bar. Arrow keys change level. M toggles sound.</p>
+  </section>
+
+  <section class="panel" id="endPanel" hidden>
+    <p class="lvl" id="endLevel"></p>
+    <h2 id="endTitle">Night falls</h2>
+    <p class="big" id="endScore">0</p>
+    <p id="endStats"></p>
+    <p id="endBest" class="small"></p>
+    <div class="actions">
+      <button id="nextBtn" class="primary" type="button" hidden>Next level</button>
+      <button id="againBtn" class="primary" type="button">Play again</button>
+      <button id="chooseBtn" class="secondary" type="button">Choose level</button>
+    </div>
+    <p class="keys">Made in Newfoundland</p>
+  </section>
+
+  <button class="mute" id="muteBtn" type="button" aria-label="Mute sound" aria-pressed="false">
+    <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+    <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
+  </button>
+</main>
+
+<script src="src/util.js"></script>
+<script src="src/levels.js"></script>
+<script src="src/audio.js"></script>
+<script src="src/palette.js"></script>
+<script src="src/draw.js"></script>
+<script src="src/landing.js"></script>
+<script src="src/hunters.js"></script>
+<script src="src/whales.js"></script>
+<script src="src/jaegers.js"></script>
+<script src="src/icebergs.js"></script>
+<script src="src/finale.js"></script>
+<script src="src/tutorial.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>
