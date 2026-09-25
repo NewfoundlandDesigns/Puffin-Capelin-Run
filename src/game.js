@@ -3,6 +3,7 @@ const $ = id => document.getElementById(id);
 const stage = $('stage'), cvs = $('game');
 let ctx = cvs.getContext('2d');   // swapped briefly to draw the level preview
 const hud = $('hud'), hScore = $('hScore'), hBeak = $('hBeak');
+const say = $('say');
 const progFill = $('progFill'), progMark = $('progMark'), hunger = $('hunger'), hFill = $('hFill');
 const startPanel = $('startPanel'), endPanel = $('endPanel');
 const againBtn = $('againBtn'), nextBtn = $('nextBtn'), chooseBtn = $('chooseBtn'), muteBtn = $('muteBtn'), playBtn = $('playBtn');
@@ -22,7 +23,7 @@ function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
   return {
     levelIdx, level,
     t: 0, anim: 0, speed: 160, dist: 0, progress: 0, idleU,
-    hunger: 0.7, lowBeep: 0, homeSpawned: false, finale: null, cam: null, bonus: 0,
+    hunger: 0.7, lowBeep: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
     p: { x: 200, y: SEA - 6, vy: 0, flap: 0, inv: 0, breath: 1, gasp: false, wasUnder: false },
     beak: [], score: 0, deliveries: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
     fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], bergs: [], cliffs: [], parts: [], pops: [],
@@ -96,7 +97,9 @@ function deliver(c, quiet) {
   c.note = { beak: st.beak.slice(), n, gold, mult, pts, bestYet, life: 2.6, max: 2.6 };
   st.bestDrop = Math.max(st.bestDrop, n);
   st.score += pts; st.deliveries++; st.beak = []; c.used = true;
+  const hungerBefore = st.hunger;
   st.hunger = Math.min(1, st.hunger + (n + gold) * FEED_PER_FISH);
+  chatterFed(hungerBefore);
   hunger.classList.remove('fed'); void hunger.offsetWidth; hunger.classList.add('fed');
   const bx = c.x + c.w * BURROW, by = c.top + 10;
   if (!quiet) burst(bx, by, 26 + gold * 10, '#feb445', 220, 260, 2, 4, 0.9);
@@ -207,7 +210,8 @@ function update(dt) {
   // the puffling gets hungrier; deliveries refill it
   if (!tutorial || tutorial.hungerOn) s.hunger = Math.max(tutorial ? 0.3 : 0, s.hunger - wdt / s.level.hungerSeconds);
   if (s.hunger < 0.2) { s.lowBeep -= dt; if (s.lowBeep <= 0) { Snd.chirp(); s.lowBeep = 1.3; } }
-  if (s.hunger <= 0 && !s.landing) { caught('hungry'); return; }
+  updateChatter(dt);
+  if (s.hunger <= 0 && !s.landing) { hideSay(); caught('hungry'); return; }
 
   // the home colony arrives exactly at 100%
   const homeLead = 200 * BURROW - 40;
@@ -482,6 +486,7 @@ function showLevels() {
 
 function start(i = currentLevel) {
   if (isLocked(i)) return;
+  hideSay();
   currentLevel = i; store.set('capelin-run-level', String(i));
   Snd.init(); Snd.start(); Snd.setUnder(false);
   st = newState(0, i);
@@ -493,7 +498,7 @@ function start(i = currentLevel) {
   updateHud();
 }
 function endGame(reason) {
-  running = false; holding = false;
+  running = false; holding = false; hideSay();
   Snd.end(); Snd.setUnder(false);
   const lv = st.level, score = st.score, best = bestFor(lv), isBest = score > best;
   if (isBest) store.set(bestKey(lv), String(score));

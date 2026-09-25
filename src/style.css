@@ -178,3 +178,20 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 @keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(254,180,69,0)}50%{box-shadow:0 0 0 4px rgba(254,180,69,0.7)}}
 @media (prefers-reduced-motion: reduce){.hunger.glow .hbar,.progress.glow,.hunger.glow .chick{animation:none;box-shadow:0 0 0 3px rgba(254,180,69,0.7)}}
 @media (max-width:520px){.tut{bottom:70px}.tut-card h3{font-size:1.15rem}.tut-card p{font-size:0.9rem}}
+
+/* ---------- the puffling talks ---------- */
+.stat.right{position:relative}
+.say{
+  position:absolute;top:calc(100% + 12px);right:0;max-width:210px;width:max-content;
+  background:#ffffff;color:var(--navy);border-radius:14px;padding:8px 12px;
+  font-size:0.9rem;font-weight:800;line-height:1.25;letter-spacing:-0.01em;text-align:left;
+  text-shadow:none;box-shadow:0 6px 18px rgba(5,13,24,0.35);
+}
+.say::before{
+  content:"";position:absolute;top:-7px;right:108px;border:8px solid transparent;border-top:0;border-bottom-color:#ffffff;
+}
+.say[hidden]{display:none}
+.say.pop{animation:sayPop .28s cubic-bezier(.3,1.6,.6,1)}
+@keyframes sayPop{from{transform:scale(.6) translateY(-6px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.say.pop{animation:none}}
+@media (max-width:520px){.say{max-width:170px;font-size:0.82rem}.say::before{right:96px}}

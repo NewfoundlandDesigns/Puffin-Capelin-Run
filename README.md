@@ -48,6 +48,7 @@ src/jaegers.js    jaegers that chase a puffin carrying fish and steal it (Cape S
 src/icebergs.js   icebergs, mostly underwater, that knock your catch loose (Iceberg Alley)
 src/finale.js     end-of-level zoom and crash landing at the home colony
 src/tutorial.js   the guided How to play run
+src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edit the lines here)
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
 ```

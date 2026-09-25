@@ -111,6 +111,7 @@ function updateTutorial(dt) {
 }
 
 function hideTutorial() {
+  hideSay();
   tut.hidden = true;
   hunger.classList.remove('glow');
   hud.querySelector('.progress').classList.remove('glow');

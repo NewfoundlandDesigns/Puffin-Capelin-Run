@@ -719,6 +719,7 @@ function draw() {
 
   if (scene.rain) drawRain(t, night);
   if (scene.frontFog) drawFrontFog(pal.cloud, night);
+  drawChatter();
   for (const c of s.cliffs) drawDropNote(c);
 
   ctx.textAlign = 'center'; ctx.lineJoin = 'round';
