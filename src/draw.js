@@ -253,8 +253,9 @@ function drawCliff(c, t, night) {
     const out = Math.min(1, c.chick / 0.3, (1.3 - Math.min(c.chick, 1.3)) / 0.2 + (c.chick > 1.3 ? 1 : 0));
     const bob = Math.abs(Math.sin(t * 9)) * 2;
     ctx.save();
-    ctx.beginPath(); ctx.rect(bx - 24, by - 50, 48, 51); ctx.clip();
-    drawChick(bx, by + 8 - 17 * out - bob * out, 1);
+    const sc = pufflingSize();            // it grows as it's fed
+    ctx.beginPath(); ctx.rect(bx - 24 * sc, by - 50 * sc, 48 * sc, 51 * sc); ctx.clip();
+    drawChick(bx, by + 8 * sc - 17 * sc * out - bob * out, sc);
     ctx.restore();
   }
   if (c.home) {                          // a little pennant marks the home colony
