@@ -87,6 +87,14 @@ Key ideas:
 - Landings: about 1.9 s, no slow motion (Mark disliked slowing the scroll), smooth eased
   poses. Invulnerable while landing. Callout sits up and right of the burrow so it doesn't
   cover the puffin.
+- Feeding: a delivery scores at once, but the puffling gulps the fish one at a time
+  (`st.feedQ`, every `GULP_EVERY` s). Food past 100% becomes full-belly time (`st.full`,
+  no hunger drain), so big stacks never go to waste. The HUD meter previews the beak's food
+  as a striped segment, amber when it would spill over. An empty meter starts a
+  `LAST_CHANCE` countdown (`st.starving`, red bar under the meter) and hurries the next
+  burrow in; delivering in time saves the run. The puffling grows with fish fed
+  (`st.fedFish`, `pufflingSize()`), in the HUD and the burrow, and its weight is on the end
+  screen. Growth is cosmetic on purpose: Mark didn't want it to make the puffling hungrier.
 - Seal, hunting gull, and whale catches end the run; ordinary gulls, jaegers, icebergs and
   running out of air only cost the stack.
 

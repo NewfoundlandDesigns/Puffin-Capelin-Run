@@ -24,7 +24,7 @@ const el = id => ({
   id, hidden: id === 'say', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
   children: [], offsetWidth: 1, parentElement: {},
   classList: { toggle() {}, add() {}, remove() {} },
-  querySelector: () => ({ classList: { toggle() {}, remove() {} } }),
+  querySelector: () => ({ style: {}, classList: { toggle() {}, remove() {} } }),
   addEventListener(e, f) { this['on' + e] = f; }, appendChild(c) { this.children.push(c); },
   setAttribute() {}, focus() {}, blur() {}, getContext: () => ctx,
   getBoundingClientRect: () => ({ width: id === 'pvCanvas' ? 400 : 1200, height: id === 'pvCanvas' ? 300 : 700 }),
@@ -40,7 +40,7 @@ Object.assign(globalThis, {
   requestAnimationFrame: cb => { raf = cb; },
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 }
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, LEVELS };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, deliver, LEVELS };');
 const T = globalThis.__T;
 const SEA = 270;
 
@@ -56,6 +56,40 @@ const quiet = s => { s.tSeal = s.tHunt = s.tWhale = s.tJaeger = s.tBerg = s.tGul
 T.start(0);
 for (let f = 0; f < 60 * 40 && !ended(); f++) { T.st.p.inv = 99; frame(); }
 check('unfed puffling ends the run', els.endTitle.textContent === 'Puffling too hungry', els.endTitle.textContent);
+
+// 1b. The meter running out starts a last chance, not an instant loss
+T.start(0); quiet(T.st);
+T.st.hunger = 0.001;
+for (let f = 0; f < 10; f++) { T.st.p.inv = 99; frame(); }
+check('empty meter starts a last chance', !ended() && T.st.starving > 0, `starving ${T.st.starving.toFixed(2)}`);
+let lastF = 10;
+while (!T.st.caught && lastF < 60 * 20) { T.st.p.inv = 99; frame(); lastF++; }
+check('last chance runs out after about 6 seconds', T.st.caught?.reason === 'hungry' && Math.abs(lastF / 60 - 6) < 0.3, `${(lastF / 60).toFixed(1)}s`);
+while (!ended()) frame();
+
+// 1c. A delivery during the last chance saves the run; fish are gulped one at a time
+const burrow = () => ({ x: 400, w: 160, top: 130, used: false });
+T.start(0); quiet(T.st);
+T.st.hunger = 0.001;
+for (let f = 0; f < 10; f++) { T.st.p.inv = 99; frame(); }
+T.st.beak = [false, false, false, true];               // 3 capelin + 1 golden = 5 fish of food
+T.deliver(burrow());
+check('delivery during the last chance saves the run', T.st.starving === 0 && !ended());
+frame();
+check('fish are not all swallowed at once', T.st.hunger < 0.05 && T.st.feedQ.length === 4, `hunger ${T.st.hunger.toFixed(3)}`);
+for (let f = 0; f < 60; f++) frame();
+check('all fish gulped within a second', T.st.feedQ.length === 0 && Math.abs(T.st.hunger - 0.4) < 0.05, `hunger ${T.st.hunger.toFixed(3)}`);
+check('puffling grows as it is fed', T.st.fedFish === 5);
+
+// 1d. Fish that don't fit give a full belly, which holds off hunger
+T.start(0); quiet(T.st);
+T.st.hunger = 0.9; T.st.beak = Array(6).fill(false);   // 0.48 of food into 0.1 of room
+T.deliver(burrow());
+for (let f = 0; f < 60; f++) { T.st.p.inv = 99; frame(); }
+const fullAfter = T.st.full;
+check('overflow becomes full-belly time', T.st.hunger === 1 && fullAfter > 3, `full ${fullAfter.toFixed(2)}s`);
+for (let f = 0; f < 60; f++) { T.st.p.inv = 99; frame(); }
+check('no hunger while the belly is full', T.st.hunger === 1 && T.st.full < fullAfter);
 
 // 2. Every level reaches the finale when safe and fed
 for (let i = 0; i < T.LEVELS.length; i++) {

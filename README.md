@@ -2,7 +2,7 @@
 
 A small one-button game about an Atlantic puffin feeding its puffling off the Newfoundland coast, from morning until nightfall.
 
-Hold to dive, let go to rise. Catch capelin, stack them in your beak, and deliver them to burrows along the way to keep your puffling fed. If its hunger meter empties, the run is over. Every extra fish in a stack scores more than the last, and golden capelin multiply the delivery and count double for hunger. Reach 100% to make it home to the colony, which unlocks the next level. Watch your air underwater and keep clear of gulls; if a seal catches you, the run is over.
+Hold to dive, let go to rise. Catch capelin, stack them in your beak, and deliver them to burrows along the way to keep your puffling fed. It gulps each delivery down one fish at a time and grows as it eats. The striped part of its meter shows what your beak will add; fish that don't fit give it a full belly, a few seconds without getting hungry. If the meter empties, you get a few seconds' last chance to reach a burrow before the run is over. Every extra fish in a stack scores more than the last, and golden capelin multiply the delivery and count double for hunger. Reach 100% to make it home to the colony, which unlocks the next level. Watch your air underwater and keep clear of gulls; if a seal catches you, the run is over.
 
 ## Levels
 
@@ -78,10 +78,10 @@ Builds the game and plays through every level to the finale, hunger running out,
 
 Most of the feel lives in a few places:
 
-- `src/util.js`: `LEVEL_DIST` (level length), `FEED_PER_FISH`, `AIR_SECONDS`, `MAX_STACK`
+- `src/util.js`: `LEVEL_DIST` (level length), `FEED_PER_FISH`, `AIR_SECONDS`, `MAX_STACK`, and feeding: `GULP_EVERY`, `FULL_PER_FISH`, `FULL_MAX`, `LAST_CHANCE`, `GROW_FISH`
 - `src/levels.js`: per-level `hungerSeconds` (how long a full puffling lasts) and hazard timings
 - `src/game.js`, `update()`: spawn timers for fish, golden capelin, gulls, seals and sea stacks, plus scroll speed
-- `src/game.js`, `deliver()`: scoring (triangular stack score × golden multiplier)
+- `src/game.js`, `deliver()`: scoring (triangular stack score × golden multiplier); `feed()`, `updateFeeding()`, `startLastChance()`: the puffling's meter
 
 ## Ideas for later
 

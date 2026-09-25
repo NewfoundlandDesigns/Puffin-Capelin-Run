@@ -5,6 +5,7 @@ let ctx = cvs.getContext('2d');   // swapped briefly to draw the level preview
 const hud = $('hud'), hScore = $('hScore'), hBeak = $('hBeak');
 const say = $('say');
 const progFill = $('progFill'), progMark = $('progMark'), hunger = $('hunger'), hFill = $('hFill');
+const hGhost = $('hGhost'), hSub = $('hSub'), hChick = hunger.querySelector('.chick');
 const startPanel = $('startPanel'), endPanel = $('endPanel');
 const againBtn = $('againBtn'), nextBtn = $('nextBtn'), chooseBtn = $('chooseBtn'), muteBtn = $('muteBtn'), playBtn = $('playBtn');
 const preview = $('preview'), pvCanvas = $('pvCanvas'), pvCtx = pvCanvas.getContext('2d');
@@ -23,7 +24,7 @@ function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
   return {
     levelIdx, level,
     t: 0, anim: 0, speed: 160, dist: 0, progress: 0, idleU,
-    hunger: 0.7, lowBeep: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
+    hunger: 0.7, lowBeep: 0, feedQ: [], tGulp: 0, gulpN: 0, full: 0, starving: 0, fedFish: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
     p: { x: 200, y: SEA - 6, vy: 0, flap: 0, inv: 0, breath: 1, gasp: false, wasUnder: false },
     beak: [], score: 0, deliveries: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
     fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], bergs: [], cliffs: [], parts: [], pops: [],
@@ -97,13 +98,57 @@ function deliver(c, quiet) {
   c.note = { beak: st.beak.slice(), n, gold, mult, pts, bestYet, life: 2.6, max: 2.6 };
   st.bestDrop = Math.max(st.bestDrop, n);
   st.score += pts; st.deliveries++; st.beak = []; c.used = true;
-  const hungerBefore = st.hunger;
-  st.hunger = Math.min(1, st.hunger + (n + gold) * FEED_PER_FISH);
-  chatterFed(hungerBefore);
-  hunger.classList.remove('fed'); void hunger.offsetWidth; hunger.classList.add('fed');
+  const saved = st.starving > 0;
+  chatterFed(st.hunger, saved);
+  if (saved) { st.starving = 0; pop('Just in time!', c.x + c.w * BURROW, c.top - 30, '#feb445', 22); }
+  st.fedFish += n + gold;
+  // The puffling gulps the fish down one at a time, starting once they reach the burrow.
+  // quiet (the finale) feeds it all at once, since the run is ending.
+  const amounts = c.note.beak.map(g => (g ? 2 : 1) * FEED_PER_FISH);
+  if (quiet) { amounts.forEach(a => feed(a)); pulseFed(); }
+  else { st.feedQ.push(...amounts); st.tGulp = Math.max(st.tGulp, 0.3); }
   const bx = c.x + c.w * BURROW, by = c.top + 10;
   if (!quiet) burst(bx, by, 26 + gold * 10, '#feb445', 220, 260, 2, 4, 0.9);
   Snd.deliver(n, mult);
+}
+
+// Food goes into the meter first; what doesn't fit becomes full-belly time, when the puffling doesn't get hungry.
+function feed(amount) {
+  const room = 1 - st.hunger;
+  if (amount <= room) { st.hunger += amount; return; }
+  const wasFull = st.full > 0;
+  st.hunger = 1;
+  st.full = Math.min(FULL_MAX, st.full + (amount - room) / FEED_PER_FISH * FULL_PER_FISH);
+  if (!wasFull) chatterFull();
+}
+function pulseFed() { hunger.classList.remove('fed'); void hunger.offsetWidth; hunger.classList.add('fed'); }
+const queuedFood = () => st.feedQ.reduce((a, b) => a + b, 0);
+const beakFood = () => (stackN() + goldN()) * FEED_PER_FISH;
+// How big the puffling has grown this run: 1 at the start, up to 1.4 once it's had GROW_FISH fish.
+const pufflingGrowth = () => Math.min(1, (st.fedFish || 0) / GROW_FISH);
+const pufflingSize = () => 1 + 0.4 * pufflingGrowth();
+
+function updateFeeding(dt) {
+  const s = st;
+  if (!s.feedQ.length) { s.gulpN = 0; return; }
+  s.tGulp -= dt;
+  if (s.tGulp > 0) return;
+  const amount = s.feedQ.shift();
+  feed(amount);
+  Snd.gulpFish(s.gulpN++, amount > FEED_PER_FISH);
+  if (s.gulpN === 1 || !s.feedQ.length) pulseFed();
+  s.tGulp = GULP_EVERY;
+}
+
+// The meter has run out: a few seconds to get fish to a burrow before the run ends.
+function startLastChance() {
+  const s = st, p = s.p;
+  s.starving = LAST_CHANCE;
+  Snd.hungry();
+  pop('Last chance! Get fish to a burrow', p.x + 20, p.y - 40, '#ffffff', 17);
+  chatterLastChance();
+  // make sure a burrow is on its way
+  if (!s.cliffs.some(c => !c.used && !c.home && c.x + c.w * BURROW > p.x)) s.tCliff = Math.min(s.tCliff, 0);
 }
 
 /* ================= CAUGHT ================= */
@@ -208,10 +253,23 @@ function update(dt) {
   const homeX = Math.min(VW * 0.28, 240);
 
   // the puffling gets hungrier; deliveries refill it
-  if (!tutorial || tutorial.hungerOn) s.hunger = Math.max(tutorial ? 0.3 : 0, s.hunger - wdt / s.level.hungerSeconds);
-  if (s.hunger < 0.2) { s.lowBeep -= dt; if (s.lowBeep <= 0) { Snd.chirp(); s.lowBeep = 1.3; } }
+  // (a full belly holds it off for a while)
+  if (!tutorial || tutorial.hungerOn) {
+    if (s.full > 0) s.full = Math.max(0, s.full - wdt);
+    else s.hunger = Math.max(tutorial ? 0.3 : 0, s.hunger - wdt / s.level.hungerSeconds);
+  }
+  updateFeeding(dt);
+  if (s.hunger < 0.2) { s.lowBeep -= dt; if (s.lowBeep <= 0) { Snd.chirp(); s.lowBeep = s.starving > 0 ? 0.5 : 1.3; } }
   updateChatter(dt);
-  if (s.hunger <= 0 && !s.landing) { hideSay(); caught('hungry'); return; }
+  // Out of food: a last chance to reach a burrow. It waits while fish are on their way in.
+  if (s.hunger > 0) s.starving = 0;
+  else if (!s.landing && !s.feedQ.length) {
+    if (s.starving <= 0) startLastChance();
+    else {
+      s.starving -= dt;
+      if (s.starving <= 0) { hideSay(); caught('hungry'); return; }
+    }
+  }
 
   // the home colony arrives exactly at 100%
   const homeLead = 200 * BURROW - 40;
@@ -379,8 +437,19 @@ function updateHud() {
   const pct = (st.progress * 100).toFixed(2) + '%';
   progFill.style.width = pct; progMark.style.left = pct;
   hFill.style.width = (st.hunger * 100).toFixed(1) + '%';
+  // preview of what the beak will add, on top of anything still being gulped down
+  const after = st.hunger + queuedFood(), from = Math.min(1, after);
+  hGhost.style.left = (from * 100).toFixed(1) + '%';
+  hGhost.style.width = ((Math.min(1, after + beakFood()) - from) * 100).toFixed(1) + '%';
+  hunger.classList.toggle('over', stackN() > 0 && after + beakFood() > 1);
+  hunger.classList.toggle('full', st.full > 0);
+  hunger.classList.toggle('starving', st.starving > 0);
+  hSub.style.width = (st.starving > 0 ? st.starving / LAST_CHANCE : st.full / FULL_MAX) * 100 + '%';
   hunger.classList.toggle('mid', st.hunger < 0.5 && st.hunger >= 0.2);
   hunger.classList.toggle('low', st.hunger < 0.2);
+  // the puffling grows as it's fed
+  const size = Math.round(30 * pufflingSize()) + 'px';
+  if (hChick.style.width !== size) { hChick.style.width = size; hChick.style.height = size; }
 }
 
 /* ================= FLOW ================= */
@@ -512,7 +581,8 @@ function endGame(reason) {
   const d = st.deliveries;
   endStats.textContent = (complete ? `Home bonus ${st.bonus}. ` : `Made it ${Math.floor(st.progress * 100)}% of the way. `) +
     `${d} ${d === 1 ? 'delivery' : 'deliveries'}, biggest stack ${st.biggest}` +
-    (st.goldCaught ? `, ${st.goldCaught} golden capelin.` : '.');
+    (st.goldCaught ? `, ${st.goldCaught} golden capelin.` : '.') +
+    (st.fedFish ? ` Your puffling grew from 40 g to ${40 + st.fedFish * 4} g.` : '');
   const next = complete && st.levelIdx + 1 < LEVELS.length ? st.levelIdx + 1 : -1;
   nextBtn.hidden = next < 0;
   nextBtn.dataset.level = next;

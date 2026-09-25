@@ -37,8 +37,25 @@ body{
 .chick{width:30px;height:30px;filter:drop-shadow(0 1px 2px rgba(5,13,24,0.5))}
 .chick .brows{opacity:0;transition:opacity .2s}
 .hunger.low .chick .brows,.hunger.mid .chick .brows{opacity:1}
-.hbar{width:92px;height:10px;border-radius:999px;background:rgba(255,255,255,0.22);overflow:hidden;box-shadow:0 1px 3px rgba(5,13,24,0.4)}
+.chick{transition:width .4s ease-out,height .4s ease-out}
+.hmeter{display:flex;flex-direction:column;gap:3px}
+.hbar{position:relative;width:92px;height:10px;border-radius:999px;background:rgba(255,255,255,0.22);overflow:hidden;box-shadow:0 1px 3px rgba(5,13,24,0.4)}
 .hfill{height:100%;width:70%;border-radius:999px;background:#ffffff;transition:width .25s ease-out,background-color .3s}
+/* what the fish in the beak will add: white stripes, amber when some would spill over into a full belly */
+.hghost{position:absolute;top:0;bottom:0;left:70%;width:0;border-radius:999px;
+  background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.7) 0 3px,rgba(255,255,255,0.3) 3px 6px);transition:left .25s ease-out,width .25s ease-out}
+.hunger.over .hghost{background:repeating-linear-gradient(-45deg,rgba(254,180,69,0.95) 0 3px,rgba(254,180,69,0.45) 3px 6px)}
+.hunger.over .hbar{box-shadow:0 1px 3px rgba(5,13,24,0.4),0 0 0 2px rgba(254,180,69,0.8)}
+/* the thin bar underneath: full-belly time (amber) or the last-chance countdown (red) */
+.hsub{width:92px;height:3px;border-radius:999px;overflow:hidden;visibility:hidden}
+#hSub{height:100%;width:0;border-radius:999px;background:var(--amber)}
+.hunger.full .hsub,.hunger.starving .hsub{visibility:visible}
+.hunger.starving #hSub{background:var(--alert)}
+.hunger.full .hfill{box-shadow:0 0 8px rgba(254,180,69,0.9)}
+.hunger.starving .hbar{animation:starve .5s ease-in-out infinite}
+.hunger.starving .chick{animation:fret .25s ease-in-out infinite}
+@keyframes starve{0%,100%{box-shadow:0 0 0 0 rgba(220,54,44,0)}50%{box-shadow:0 0 0 4px rgba(220,54,44,0.85)}}
+@media (prefers-reduced-motion: reduce){.hunger.starving .hbar{animation:none;box-shadow:0 0 0 3px rgba(220,54,44,0.85)}}
 .hunger.mid .hfill{background:var(--amber)}
 .hunger.low .hfill{background:var(--alert)}
 .hunger.low .chick{animation:fret .5s ease-in-out infinite}

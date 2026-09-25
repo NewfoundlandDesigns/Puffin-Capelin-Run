@@ -94,6 +94,10 @@ const Snd = (() => {
     },
     bubbles() { for (let i = 0; i < 9; i++) tone(rand(180, 420), 0.08, { type: 'sine', vol: 0.06, slideTo: rand(420, 700), delay: i * 0.13 + rand(0, 0.05) }); },
     whaleLunge() { noise(0.7, { vol: 0.2, freq: 220, sweepTo: 900, filter: 'lowpass' }); tone(70, 0.8, { type: 'sine', vol: 0.18, slideTo: 110 }); },
+    gulpFish(i, gold) {                  // the puffling swallowing one fish; climbs with each one
+      tone(semi(330, Math.min(i, 14)), 0.08, { type: 'sine', vol: 0.12, slideTo: semi(520, Math.min(i, 14)) });
+      if (gold) tone(semi(1568, Math.min(i, 14)), 0.12, { type: 'triangle', vol: 0.06, delay: 0.03 });
+    },
     gulp() { tone(220, 0.25, { type: 'sine', vol: 0.18, slideTo: 90 }); },
     jaegerCall() { tone(1500, 0.16, { type: 'square', vol: 0.05, slideTo: 1100 }); tone(1600, 0.2, { type: 'square', vol: 0.05, slideTo: 1000, delay: 0.18 }); },
     jaegerSteal() { noise(0.1, { vol: 0.2, freq: 900 }); [0, -4, -7].forEach((s, i) => tone(semi(880, s), 0.1, { type: 'square', vol: 0.05, delay: i * 0.07 })); },

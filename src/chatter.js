@@ -13,6 +13,9 @@ const HUNGRY_LINES = [
   'Tell the gulls I loved them.'
 ];
 const FED_LINES = ['Mmm, capelin!', 'Yesss! Thanks!', 'Best parent ever.', 'Nom nom nom.'];
+const FULL_LINES = ['So... full...', '*burp*', 'Couldn\u2019t eat another bite.', 'I\u2019m stuffed, b\u2019y!'];
+const LAST_CHANCE_LINES = ['WAAAAAH!', 'I\u2019m fading away!', 'Last call for capelin!', 'Any fish! Any fish at all!'];
+const SAVED_LINES = ['You came back!', 'Just in time!', 'I knew you\u2019d make it.'];
 const AIR_LINES = [
   'Mmmph!',
   'Glub glub!',
@@ -44,7 +47,11 @@ function updateChatter(dt) {
   if (s.hunger > 0.6) c.peckish = false;
   if (s.hunger < 0.2) {
     c.nextNag -= dt;
-    if (c.nextNag <= 0) { c.last = pickLine(HUNGRY_LINES, c.last); sayPuffling(c.last); c.nextNag = 3.4; }
+    if (c.nextNag <= 0) {
+      const wail = s.starving > 0;
+      c.last = pickLine(wail ? LAST_CHANCE_LINES : HUNGRY_LINES, c.last); sayPuffling(c.last, wail ? 1.6 : 2.6);
+      c.nextNag = wail ? 1.8 : 3.4;
+    }
   } else c.nextNag = 0.4;
   // puffin, underwater with little air left
   const under = p.y > SEA + 6;
@@ -54,9 +61,17 @@ function updateChatter(dt) {
   if (c.phew > 0) c.phew -= dt;
 }
 
-// Called from deliver(): a thank-you if the puffling was getting hungry
-function chatterFed(before) {
-  if (before < 0.35) sayPuffling(pickLine(FED_LINES), 1.8);
+// Called from deliver(): a thank-you if the puffling was getting hungry, or relief if it was a last-second save
+function chatterFed(before, saved) {
+  if (saved) sayPuffling(pickLine(SAVED_LINES), 2);
+  else if (before < 0.35) sayPuffling(pickLine(FED_LINES), 1.8);
+}
+// Called when a delivery overflows into a full belly
+function chatterFull() { sayPuffling(pickLine(FULL_LINES), 1.8); }
+// Called when the meter runs out and the last chance starts
+function chatterLastChance() {
+  const c = st.chat;
+  c.last = pickLine(LAST_CHANCE_LINES, c.last); sayPuffling(c.last, 1.6); c.nextNag = 1.8;
 }
 
 /* ---------- the puffin's speech bubble, drawn on the canvas ---------- */
