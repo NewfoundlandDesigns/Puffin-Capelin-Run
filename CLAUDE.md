@@ -26,7 +26,7 @@ Plain classic scripts (not modules) sharing globals, loaded in this order by `in
 
 ```
 util.js      constants (WORLD_H 600, SEA 270, LEVEL_DIST, MAX_STACK, AIR_SECONDS,
-             FEED_PER_FISH, UNLOCK_ALL), rand/clamp, localStorage wrapper
+             FEED_PER_FISH, DEV/UNLOCK_ALL), rand/clamp, localStorage wrapper
 levels.js    LEVELS: name, scene, hazard timings, threats (for the preview), hungerSeconds
 audio.js     Snd: all sound synthesized with Web Audio (no audio files)
 palette.js   SCENES: per-level day-to-night colour keyframes and scenery flags
@@ -133,10 +133,18 @@ Key ideas:
 - Seal, hunting gull, and whale catches end the run; ordinary gulls, jaegers, gannets, icebergs and
   running out of air only cost the stack.
 
-## Before release
+## Release
 
-- Set `UNLOCK_ALL = false` in `src/util.js` (currently true for testing). Shift+U on the
-  level picker also unlocks everything for testing.
+- Testing mode is `?dev` in the URL (`DEV` in util.js), which sets `UNLOCK_ALL` and allows
+  Shift+U. Without it, levels and outfits must be earned. The smoke test stubs `?dev`.
+- Pause (`setPaused`): pause button, P/Esc, and automatically on `visibilitychange` (hidden) and
+  window `blur`. Freezes `update`, suspends the AudioContext. Quitting from pause goes to the
+  picker without recording stats (or skips the tutorial).
+- The game lives in its own repo (NewfoundlandDesigns/Puffin-Capelin-Run), not on the Fun Puffin
+  website.
+- Still to decide or do before launch: where it's hosted (e.g. GitHub Pages from this repo),
+  the player-facing name, a licence, phone playtesting, balance check, favicon/meta/share
+  image, and self-hosting DM Sans (the only outside request).
 - localStorage keys still use the old `capelin-run-*` prefix on purpose, so existing best
   scores and unlocks survived the rename to Fun Puffin. Don't rename them without a migration.
 - Commits so far use the author `NewfoundlandDesigns <NewfoundlandDesigns@users.noreply.github.com>`.

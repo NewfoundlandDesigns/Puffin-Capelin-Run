@@ -154,6 +154,13 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
   display:grid;place-items:center;padding:0;
 }
 .mute:hover{background:rgba(10,22,38,0.75)}
+.pausebtn{
+  position:absolute;right:66px;bottom:14px;width:44px;height:44px;border-radius:50%;
+  border:0;background:rgba(10,22,38,0.55);color:#fff;cursor:pointer;display:grid;place-items:center;padding:0;
+}
+.pausebtn:hover{background:rgba(10,22,38,0.75)}
+.pausebtn[hidden]{display:none}
+.pausebtn svg{width:20px;height:20px}
 .mute svg{width:22px;height:22px}
 .mute .off{display:none}
 .mute[aria-pressed="true"] .on{display:none}

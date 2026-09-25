@@ -1,6 +1,9 @@
 /* Shared constants and helpers */
 const WORLD_H = 600, SEA = 270, MAX_STACK = 12, LEVEL_DIST = 23700, AIR_SECONDS = 5;
-const UNLOCK_ALL = true;        // TESTING: every level playable. Set to false before release.
+// Testing mode: open the game with ?dev on the end of the address (index.html?dev) to unlock every
+// level and outfit, and to allow Shift+U on the level picker. Players never see it.
+const DEV = typeof location !== 'undefined' && /[?&]dev\b/.test(location.search || '');
+const UNLOCK_ALL = DEV;
 const FEED_PER_FISH = 0.08;    // hunger refilled per fish delivered (golden capelin count twice)
 const GULP_EVERY = 0.09;        // seconds between the puffling's gulps as a delivery goes down, one fish at a time
 const FULL_PER_FISH = 1.2;     // fish that don't fit in a full puffling buy this many seconds of full belly (no hunger)

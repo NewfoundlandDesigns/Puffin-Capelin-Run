@@ -51,6 +51,7 @@ const Snd = (() => {
   return {
     init,
     get muted() { return muted; },
+    pause(on) { if (ac) { if (on) ac.suspend(); else ac.resume(); } },   // silence everything, surf included
     toggle() {
       muted = !muted; store.set('capelin-run-muted', muted ? '1' : '0');
       if (master) master.gain.setTargetAtTime(muted ? 0 : 0.75, ac.currentTime, 0.05);

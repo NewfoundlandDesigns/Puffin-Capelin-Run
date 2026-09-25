@@ -15,12 +15,13 @@ const tutText = $('tutText'), tutHint = $('tutHint'), tutTimer = $('tutTimer'), 
 const lvDots = $('lvDots'), prevLv = $('prevLv'), nextLv = $('nextLv'), pvLock = $('pvLock');
 const wardBtn = $('wardBtn'), wardPanel = $('wardPanel'), wardCv = $('wardCv'), wardNote = $('wardNote');
 const wardSlots = $('wardSlots'), wardTip = $('wardTip'), wardDone = $('wardDone');
+const pauseBtn = $('pauseBtn'), pausePanel = $('pausePanel'), resumeBtn = $('resumeBtn'), quitBtn = $('quitBtn');
 const endUnlock = $('endUnlock'), unlockCv = $('unlockCv'), unlockName = $('unlockName'), unlockMore = $('unlockMore'), wearBtn = $('wearBtn');
 const endLevel = $('endLevel'), endTitle = $('endTitle'), endScore = $('endScore'), endStats = $('endStats'), endBest = $('endBest');
 
 /* ================= STATE ================= */
 let W = 0, H = 0, S = 1, VW = 800, dpr = 1;
-let running = false, holding = false, last = 0;
+let running = false, holding = false, last = 0, paused = false;
 
 function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
   const level = levelOverride || LEVELS[levelIdx];
@@ -697,10 +698,30 @@ function drawWardrobe(dt) {
   drawOutfitCard(wardCv, wornLook(), { scene: true, t: wardT });
 }
 
+/* ---------- pause ---------- */
+// Everything stops, sound included. Also happens by itself when the tab is hidden or the window
+// loses focus (a phone call, switching apps), so a run is never lost to an interruption.
+function setPaused(on) {
+  if (on === paused || (on && !running)) return;
+  paused = on; holding = false;
+  pausePanel.hidden = !on;
+  Snd.pause(on);
+  if (on) resumeBtn.focus({ preventScroll: true });
+  else if (document.activeElement && document.activeElement !== muteBtn) document.activeElement.blur();
+}
+function quitRun() {
+  setPaused(false);
+  if (st.tutorial) { skipTutorial(); return; }
+  running = false; Snd.setUnder(false); hideSay();
+  showLevels();
+}
+
 function frame(now) {
   const dt = last ? clamp((now - last) / 1000, 0, 0.05) : 0;
   last = now;
-  if (running) { update(dt); if (running) updateHud(); } else idle(dt);
+  if (running) { if (!paused) { update(dt); if (running) updateHud(); } } else idle(dt);
+  const showPause = running && !paused;
+  if (pauseBtn.hidden === showPause) pauseBtn.hidden = !showPause;
   draw();
   drawPreview(dt);
   drawWardrobe(dt);
@@ -716,12 +737,14 @@ muteBtn.addEventListener('click', () => { Snd.init(); Snd.toggle(); syncMute(); 
 syncMute();
 
 stage.addEventListener('pointerdown', e => {
-  if (e.target.closest('.panel, .mute')) return;
+  if (e.target.closest('.panel, .mute, .pausebtn') || paused) return;
   if (running) { holding = true; e.preventDefault(); }
 });
 ['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { holding = false; }));
 stage.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => {
+  if (running && (e.code === 'KeyP' || e.code === 'Escape') && !e.repeat) { e.preventDefault(); setPaused(!paused); return; }
+  if (paused) { if (e.code === 'Space' && !e.repeat) { e.preventDefault(); setPaused(false); } return; }
   if (!wardPanel.hidden) {                              // the wardrobe has its own buttons; Escape closes it
     if (e.code === 'Escape') { e.preventDefault(); closeWardrobe(); }
     return;
@@ -729,8 +752,8 @@ window.addEventListener('keydown', e => {
   if (!running && !startPanel.hidden && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
     e.preventDefault(); selectLevel(selected + (e.code === 'ArrowRight' ? 1 : -1)); return;
   }
-  if (e.code === 'KeyU' && e.shiftKey && !running) {   // testing: unlock every level and outfit
-    store.set('capelin-run-unlocked', String(LEVELS.length - 1)); store.set('capelin-run-outfits-all', '1'); renderPicker(); return;
+  if (e.code === 'KeyU' && e.shiftKey && !running && DEV) {   // testing mode only: unlock every level for good
+    store.set('capelin-run-unlocked', String(LEVELS.length - 1)); renderPicker(); return;
   }
   if (e.code === 'KeyM' && !e.repeat) { Snd.init(); Snd.toggle(); syncMute(); return; }
   if (e.code !== 'Space' && e.code !== 'ArrowDown') return;
@@ -738,10 +761,13 @@ window.addEventListener('keydown', e => {
   else if (e.code === 'Space' && !(document.activeElement instanceof HTMLButtonElement)) { e.preventDefault(); start(startPanel.hidden ? currentLevel : selected); }
 });
 window.addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'ArrowDown') holding = false; });
-window.addEventListener('blur', () => { holding = false; });
-document.addEventListener('visibilitychange', () => { holding = false; last = 0; });
+window.addEventListener('blur', () => { holding = false; setPaused(true); });
+document.addEventListener('visibilitychange', () => { holding = false; last = 0; if (document.hidden) setPaused(true); });
 againBtn.addEventListener('click', () => (againBtn.dataset.tutorial ? startTutorial() : start(currentLevel)));
 howBtn.addEventListener('click', startTutorial);
+pauseBtn.addEventListener('click', () => setPaused(true));
+resumeBtn.addEventListener('click', () => setPaused(false));
+quitBtn.addEventListener('click', quitRun);
 wardBtn.addEventListener('click', openWardrobe);
 wardDone.addEventListener('click', closeWardrobe);
 wearBtn.addEventListener('click', () => {

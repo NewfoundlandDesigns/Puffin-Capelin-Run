@@ -222,7 +222,7 @@ function loadStats() {
 }
 
 const outfitEarned = (o, s = loadStats()) => !!o.has(s);
-const outfitOpen = (o, s) => UNLOCK_ALL || store.get('capelin-run-outfits-all') === '1' || outfitEarned(o, s);
+const outfitOpen = (o, s) => UNLOCK_ALL || outfitEarned(o, s);
 
 // Called at the end of every run (run is null after the tutorial). Returns items earned for the first time.
 function recordRun(run, complete) {

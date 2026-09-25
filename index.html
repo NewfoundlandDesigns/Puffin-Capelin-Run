@@ -78,7 +78,7 @@
         <button class="secondary how" id="wardBtn" type="button">Wardrobe</button>
       </div>
     </div>
-    <p class="keys">Hold with mouse, finger, or space bar. Arrow keys change level. M toggles sound.</p>
+    <p class="keys">Hold with mouse, finger, or space bar. Arrow keys change level. P pauses. M toggles sound.</p>
   </section>
 
   <section class="panel" id="endPanel" hidden>
@@ -109,6 +109,19 @@
     <button class="primary play" id="wardDone" type="button">Done</button>
   </section>
 
+  <section class="panel" id="pausePanel" hidden aria-labelledby="pauseTitle">
+    <h2 id="pauseTitle">Paused</h2>
+    <p class="small">Your puffin is treading water till you're back.</p>
+    <div class="actions">
+      <button class="primary" id="resumeBtn" type="button">Resume</button>
+      <button class="secondary" id="quitBtn" type="button">Choose level</button>
+    </div>
+    <p class="keys">P or Esc pauses and resumes.</p>
+  </section>
+
+  <button class="pausebtn" id="pauseBtn" type="button" aria-label="Pause" hidden>
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+  </button>
   <button class="mute" id="muteBtn" type="button" aria-label="Mute sound" aria-pressed="false">
     <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
     <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/><path d="m16 9 6 6M22 9l-6 6"/></svg>
