@@ -13,6 +13,9 @@ const pvNum = $('pvNum'), pvName = $('pvName'), pvBest = $('pvBest'), pvBlurb = 
 const howBtn = $('howBtn'), tut = $('tut'), tutCard = $('tutCard'), tutStep = $('tutStep'), tutTitle = $('tutTitle');
 const tutText = $('tutText'), tutHint = $('tutHint'), tutTimer = $('tutTimer'), tutSkip = $('tutSkip');
 const lvDots = $('lvDots'), prevLv = $('prevLv'), nextLv = $('nextLv'), pvLock = $('pvLock');
+const wardBtn = $('wardBtn'), wardPanel = $('wardPanel'), wardCv = $('wardCv'), wardNote = $('wardNote');
+const wardSlots = $('wardSlots'), wardTip = $('wardTip'), wardDone = $('wardDone');
+const endUnlock = $('endUnlock'), unlockCv = $('unlockCv'), unlockName = $('unlockName'), unlockMore = $('unlockMore'), wearBtn = $('wearBtn');
 const endLevel = $('endLevel'), endTitle = $('endTitle'), endScore = $('endScore'), endStats = $('endStats'), endBest = $('endBest');
 
 /* ================= STATE ================= */
@@ -26,12 +29,12 @@ function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
     t: 0, anim: 0, speed: 160, dist: 0, progress: 0, idleU,
     hunger: 0.7, lowBeep: 0, feedQ: [], tGulp: 0, gulpN: 0, full: 0, starving: 0, fedFish: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
     p: { x: 200, y: SEA - 6, vy: 0, flap: 0, inv: 0, breath: 1, gasp: false, wasUnder: false },
-    beak: [], score: 0, deliveries: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
-    fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], bergs: [], cliffs: [], parts: [], pops: [],
+    beak: [], score: 0, deliveries: 0, fishDelivered: 0, saves: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
+    fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], gannets: [], bergs: [], cliffs: [], parts: [], pops: [],
     tFish: 0.5, tGull: 3, tCliff: 5.5, tGold: rand(9, 14),
     tSeal: level.seals ? level.seals.first : Infinity, tHunt: level.hunters ? level.hunters.first : Infinity,
     tWhale: level.whales ? level.whales.first : Infinity, tJaeger: level.jaegers ? level.jaegers.first : Infinity,
-    tBerg: level.bergs ? level.bergs.first : Infinity,
+    tBerg: level.bergs ? level.bergs.first : Infinity, tGannet: level.gannets ? level.gannets.first : Infinity,
     landing: null, caught: null,
     phaseSunset: false, phaseNight: false
   };
@@ -101,7 +104,7 @@ function deliver(c, quiet) {
   const saved = st.starving > 0;
   chatterFed(st.hunger, saved);
   if (saved) { st.starving = 0; pop('Just in time!', c.x + c.w * BURROW, c.top - 30, '#feb445', 22); }
-  st.fedFish += n + gold;
+  st.fedFish += n + gold; st.fishDelivered += n; if (saved) st.saves++;
   // The puffling gulps the fish down one at a time, starting once they reach the burrow.
   // quiet (the finale) feeds it all at once, since the run is ending.
   const amounts = c.note.beak.map(g => (g ? 2 : 1) * FEED_PER_FISH);
@@ -299,6 +302,11 @@ function update(dt) {
   if (s.tJaeger <= 0 && !late) {       // jaegers only bother a puffin that's carrying fish
     if (stackN() < 2 || s.jaegers.length || s.landing) s.tJaeger = 1.2; else { spawnJaeger(); s.tJaeger = rand(...s.level.jaegers.every); }
   }
+  s.tGannet -= wdt;
+  if (s.tGannet <= 0 && !late) {       // one diving at a time, and never onto a landing
+    if (s.gannets.some(g => g.state === 'stalk' || g.state === 'lock') || s.landing) s.tGannet = 0.8;
+    else { spawnGannet(); s.tGannet = rand(...s.level.gannets.every) - u * 1.5; }
+  }
   s.tBerg -= wdt;
   if (s.tBerg <= 0 && !late) {
     const nearStack = s.cliffs.some(c => c.x + c.w > VW - 200);
@@ -313,7 +321,7 @@ function update(dt) {
     }
   }
 
-  for (const f of s.fish) { f.x += f.vx * wdt; f.y += Math.cos(s.t * (f.amp > 20 ? 2 : 3) + f.ph) * f.amp * wdt; f.y = clamp(f.y, SEA + 20, 580); }
+  for (const f of s.fish) { f.x += f.vx * wdt; f.y += Math.cos(s.t * (f.amp > 20 ? 2 : 3) + f.ph) * f.amp * wdt; if (f.dy) { f.y += f.dy * wdt; f.dy *= Math.pow(0.04, wdt); } f.y = clamp(f.y, SEA + 20, 580); }
   for (const g of s.gulls) { g.x += g.vx * wdt; g.y += Math.sin(s.t * 2 + g.ph) * 20 * wdt; }
   for (const c of s.cliffs) {
     c.x -= scroll * wdt;
@@ -354,6 +362,7 @@ function update(dt) {
   updateHunters(wdt);
   updateWhales(wdt, scroll);
   updateJaegers(wdt);
+  updateGannets(wdt, scroll);
   updateBergs(wdt, scroll);
   if (s.caught) return;
 
@@ -480,6 +489,7 @@ function buildPreview(i) {
   if (threats.includes('seal')) s.seals.push({ x: vw * 0.82, y: SEA + 100, vx: 0, vy: 0, ph: 0, barked: true });
   if (threats.includes('whale')) s.whales.push({ x: vw * (threats[0] === 'whale' ? 0.8 : 0.9), state: 'hang', t: 99, rise: threats[0] === 'whale' ? 1 : 0.75, open: 1, topY: 0, ph: 0, ate: 3 });
   if (threats.includes('jaeger')) s.jaegers.push({ x: vw * 0.12, y: 110, vx: 200, vy: 20, state: 'chase', t: 99, waited: 0, ph: 0 });
+  if (threats.includes('gannet')) s.gannets.push({ x: vw * 0.76, y: SEA - 60, state: 'dive', t: 0, d: 0.3, ph: 0, splashed: true, ate: 0 });
   if (threats.includes('berg')) { const sv = st; st = s; spawnBerg(); st = sv; const b = s.bergs[0]; b.x = vw * 0.66; }
   for (const w of s.whales) w.topY = whaleTop(w.rise);
   return s;
@@ -588,11 +598,103 @@ function endGame(reason) {
   nextBtn.dataset.level = next;
   if (next >= 0) nextBtn.textContent = `Next: ${LEVELS[next].name}`;
   againBtn.className = next >= 0 ? 'secondary' : 'primary';
+  const fresh = recordRun(st, complete);             // outfits earned this run
   endBest.innerHTML = isBest && score > 0 ? '<span class="newbest">New best score.</span>' : `Your best: ${Math.max(best, score)}`;
   hud.hidden = true; endPanel.hidden = false;
+  showUnlocks(fresh);
   const keepParts = st.parts, keepPops = st.pops;
   st = newState(1, currentLevel); st.parts = keepParts; st.pops = keepPops;
   (next >= 0 ? nextBtn : againBtn).focus({ preventScroll: true });
+}
+
+/* ---------- outfit unlocks on the end screen ---------- */
+function showUnlocks(fresh) {
+  endUnlock.hidden = !fresh.length;
+  if (!fresh.length) return;
+  const o = fresh[0];
+  endUnlock.querySelector('.unlock-k').textContent = SLOTS.find(sl => sl.id === o.slot).label;
+  unlockName.textContent = o.name;
+  unlockMore.textContent = fresh.length > 1 ? `And ${fresh.length - 1} more in the Wardrobe.` : o.unlock;
+  wearBtn.dataset.outfit = o.id; wearBtn.textContent = 'Wear it'; wearBtn.disabled = false;
+  drawOutfitCard(unlockCv, [o], { focus: o.slot === 'boots' ? 'feet' : o.slot === 'feathers' ? null : 'head' });
+  Snd.golden();
+}
+
+/* ---------- wardrobe: one of each slot, locked items greyed out ---------- */
+let wardT = 0;
+function openWardrobe() {
+  startPanel.hidden = true; wardPanel.hidden = false;
+  wardNote.textContent = 'Wear one of each. Hover or tap a greyed-out one to see how to earn it.';
+  renderWardrobe();
+  wardDone.focus({ preventScroll: true });
+}
+function closeWardrobe() { wardTip.hidden = true; wardPanel.hidden = true; showLevels(); }
+const tileFocus = slot => (slot === 'boots' ? 'feet' : slot === 'feathers' ? null : 'head');
+
+function renderWardrobe(keepFocus) {
+  const stats = loadStats();
+  wardSlots.innerHTML = '';
+  for (const sl of SLOTS) {
+    const box = document.createElement('div'); box.className = 'ward-slot';
+    const h = document.createElement('h3'); h.textContent = sl.name; box.appendChild(h);
+    const grid = document.createElement('div'); grid.className = 'ward-grid';
+    grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', sl.name);
+    box.appendChild(grid); wardSlots.appendChild(box);          // in the page first, so tiles draw at their real size
+    const items = OUTFITS.filter(o => o.slot === sl.id), wornHere = items.find(o => isWorn(o) && outfitOpen(o, stats));
+    // "none" first, then each item
+    const none = document.createElement('button');
+    none.type = 'button'; none.className = 'ward-item none'; none.dataset.key = sl.id + ':none';
+    none.innerHTML = '<span>None</span>';
+    none.setAttribute('aria-pressed', wornHere ? 'false' : 'true');
+    none.setAttribute('aria-label', `No ${sl.name.toLowerCase()}`);
+    none.addEventListener('click', () => { takeOff(sl.id); renderWardrobe(none.dataset.key); });
+    tip(none, `No ${sl.name.toLowerCase()}`);
+    grid.appendChild(none);
+    for (const o of items) {
+      const open = outfitOpen(o, stats), worn = o === wornHere;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ward-item' + (open ? '' : ' locked'); b.dataset.key = o.id;
+      b.setAttribute('aria-pressed', worn ? 'true' : 'false');
+      b.setAttribute('aria-label', open ? o.name : `${o.name}, locked. To earn it: ${o.unlock}`);
+      const cv = document.createElement('canvas'); cv.setAttribute('aria-hidden', 'true'); b.appendChild(cv);
+      if (!open) b.insertAdjacentHTML('beforeend', '<svg class="lock" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="currentColor"/><path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>');
+      b.addEventListener('click', () => {
+        if (!open) { wardNote.textContent = `${o.name}: ${o.unlock}`; showTip(b, `How to earn it: ${o.unlock}`, o.name); return; }
+        if (worn) takeOff(o.slot); else { wearOutfit(o.id); Snd.init(); Snd.catchFish(3); }
+        wardNote.textContent = worn ? `Took off the ${o.name.toLowerCase()}.` : `Wearing the ${o.name.toLowerCase()}.`;
+        renderWardrobe(b.dataset.key);
+      });
+      tip(b, open ? (worn ? 'Wearing it. Tap to take it off.' : 'Tap to wear it.') : `How to earn it: ${o.unlock}`, o.name);
+      grid.appendChild(b);
+      drawOutfitCard(cv, [o], { locked: !open, focus: tileFocus(o.slot) });
+    }
+  }
+  wardTip.hidden = true;
+  if (keepFocus) { const b = wardSlots.querySelector(`[data-key="${keepFocus}"]`); if (b) b.focus({ preventScroll: true }); }
+}
+
+// A tooltip over a tile, on hover or keyboard focus, kept inside the panel
+function tip(el, text, title) {
+  const show = () => showTip(el, text, title), hide = () => { wardTip.hidden = true; };
+  el.addEventListener('pointerenter', show); el.addEventListener('focus', show);
+  el.addEventListener('pointerleave', hide); el.addEventListener('blur', hide);
+}
+function showTip(el, text, title) {
+  wardTip.innerHTML = '';
+  if (title) { const t = document.createElement('strong'); t.textContent = title; wardTip.appendChild(t); }
+  wardTip.appendChild(document.createTextNode(text));
+  wardTip.hidden = false;
+  const pr = wardPanel.getBoundingClientRect(), r = el.getBoundingClientRect();
+  const tw = wardTip.offsetWidth, th = wardTip.offsetHeight;
+  const left = clamp(r.left - pr.left + r.width / 2 - tw / 2, 8, pr.width - tw - 8);
+  wardTip.style.left = left + 'px';
+  wardTip.style.top = (r.top - pr.top + wardPanel.scrollTop - th - 8) + 'px';
+}
+
+function drawWardrobe(dt) {
+  if (wardPanel.hidden) return;
+  wardT += dt;
+  drawOutfitCard(wardCv, wornLook(), { scene: true, t: wardT });
 }
 
 function frame(now) {
@@ -601,6 +703,7 @@ function frame(now) {
   if (running) { update(dt); if (running) updateHud(); } else idle(dt);
   draw();
   drawPreview(dt);
+  drawWardrobe(dt);
   requestAnimationFrame(frame);
 }
 
@@ -619,11 +722,15 @@ stage.addEventListener('pointerdown', e => {
 ['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => { holding = false; }));
 stage.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => {
+  if (!wardPanel.hidden) {                              // the wardrobe has its own buttons; Escape closes it
+    if (e.code === 'Escape') { e.preventDefault(); closeWardrobe(); }
+    return;
+  }
   if (!running && !startPanel.hidden && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
     e.preventDefault(); selectLevel(selected + (e.code === 'ArrowRight' ? 1 : -1)); return;
   }
-  if (e.code === 'KeyU' && e.shiftKey && !running) {   // testing: unlock every level
-    store.set('capelin-run-unlocked', String(LEVELS.length - 1)); renderPicker(); return;
+  if (e.code === 'KeyU' && e.shiftKey && !running) {   // testing: unlock every level and outfit
+    store.set('capelin-run-unlocked', String(LEVELS.length - 1)); store.set('capelin-run-outfits-all', '1'); renderPicker(); return;
   }
   if (e.code === 'KeyM' && !e.repeat) { Snd.init(); Snd.toggle(); syncMute(); return; }
   if (e.code !== 'Space' && e.code !== 'ArrowDown') return;
@@ -635,6 +742,11 @@ window.addEventListener('blur', () => { holding = false; });
 document.addEventListener('visibilitychange', () => { holding = false; last = 0; });
 againBtn.addEventListener('click', () => (againBtn.dataset.tutorial ? startTutorial() : start(currentLevel)));
 howBtn.addEventListener('click', startTutorial);
+wardBtn.addEventListener('click', openWardrobe);
+wardDone.addEventListener('click', closeWardrobe);
+wearBtn.addEventListener('click', () => {
+  wearOutfit(wearBtn.dataset.outfit); wearBtn.textContent = 'Wearing it'; wearBtn.disabled = true;
+});
 tutSkip.addEventListener('click', skipTutorial);
 chooseBtn.addEventListener('click', showLevels);
 nextBtn.addEventListener('click', () => start(Number(nextBtn.dataset.level)));

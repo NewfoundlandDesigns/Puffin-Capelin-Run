@@ -78,6 +78,17 @@ SCENES.ice = {
   ])
 };
 
+// Funk Island: far out in the open Atlantic, bright and breezy, a low granite island white with seabirds
+SCENES.funk = {
+  far: 'funk', clouds: true, fog: false, sunAlpha: 1, moonAlpha: 1, swell: 1.4,
+  keys: prepKeys([
+    { u: 0,   sky: ['#2c6db3', '#6fa9dc', '#d4ebf6'], sea: ['#2a7ca6', '#175478', '#08243d'], hills: ['#8c979c', '#5f6b73'], cloud: '#ffffff' },
+    { u: 0.4, sky: ['#2a64a6', '#7aa9d6', '#f1e1b8'], sea: ['#29739c', '#154c6e', '#082038'], hills: ['#858e93', '#59646c'], cloud: '#fbf5ea' },
+    { u: 0.6, sky: ['#1f3a6c', '#84587a', '#f68646'], sea: ['#34547c', '#152e4d', '#061223'], hills: ['#4a4a5c', '#30384a'], cloud: '#dca48a' },
+    ...NIGHT_KEYS
+  ])
+};
+
 function palette(u, keys) {
   let i = 0; while (i < keys.length - 2 && u > keys[i + 1].u) i++;
   const a = keys[i], b = keys[i + 1], f = clamp((u - a.u) / (b.u - a.u), 0, 1);

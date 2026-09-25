@@ -13,13 +13,38 @@ Each level brings in one new foe, plus a little of something from earlier, so th
 3. **Baccalieu Tickle.** More seals and more hunting gulls, in a storm. A "tickle" is a narrow strait; the one by Baccalieu Island is known for rough water.
 4. **Cape St. Mary's.** Jaegers, pirate seabirds that chase any puffin carrying fish and steal the stack. Dive to lose them. The odd hunting gull.
 5. **Iceberg Alley.** Icebergs drifting out of the fog, most of each one hidden underwater. Bumping one knocks your catch loose. A few jaegers.
-6. **Trinity Bay.** The hardest level: humpback whales feeding on capelin. A bubble ring and a shaded zone warn where one will lunge. Get caught in its mouth and it swallows you, which ends the run; get clear of the ring or dive deep and pass under it. A few seals too.
+6. **Trinity Bay.** Humpback whales feeding on capelin. A bubble ring and a shaded zone warn where one will lunge. Get caught in its mouth and it swallows you, which ends the run; get clear of the ring or dive deep and pass under it. A few seals too.
+7. **Funk Island.** The hardest level: northern gannets, which plunge-dive like spears from high above. One flies in and stalks you from just ahead, its shadow following you on the water. When it locks on (a sharp cry, the shadow turns red) it tips nose-down, then drops straight down and deep into the sea at the depth you were at. A hit knocks your catch loose; change depth once it locks on, or dive below it. A few whales too. Funk Island, far off the northeast coast, is home to a big gannet colony.
 
-Later levels give the puffling a little more patience (`hungerSeconds` 27, 28 and 30 for Levels 4 to 6, instead of 25).
+Later levels give the puffling a little more patience (`hungerSeconds` 27, 28, 30 and 30 for Levels 4 to 7, instead of 25).
 
-Each level has its own scenery: clear skies and rolling hills (Capelin Scull), overcast with a seabird island (Gull Island), a storm with a lighthouse (Baccalieu Tickle), towering cliffs and Bird Rock white with gannets (Cape St. Mary's), pale fog with bergs on the horizon (Iceberg Alley), and summer hills with an outport of jellybean houses (Trinity Bay).
+Each level has its own scenery: clear skies and rolling hills (Capelin Scull), overcast with a seabird island (Gull Island), a storm with a lighthouse (Baccalieu Tickle), towering cliffs and Bird Rock white with gannets (Cape St. Mary's), pale fog with bergs on the horizon (Iceberg Alley), summer hills with an outport of jellybean houses (Trinity Bay), and open ocean with a low granite island white with seabirds (Funk Island).
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
+
+## Outfits
+
+The level picker has a **Wardrobe**: outfits for your puffin, earned by playing. There are five slots and your puffin can wear one of each: a hat, glasses, a scarf or necklace, boots, and feathers. They only change the look, never how the puffin plays. Items you haven't earned are greyed out with a padlock; hover over one (or tap it) to see how to earn it. The end screen announces anything new with a **Wear it** button.
+
+| Slot | Item | Earned by |
+|---|---|---|
+| Hats | Sou'wester | Finishing Baccalieu Tickle |
+| | Knitted toque | Finishing Iceberg Alley |
+| | Pitcher plant crown | Growing your puffling to full size in one run |
+| | Captain's cap | Finishing Funk Island |
+| | Mummer | Finishing all seven levels |
+| Glasses | Nan's reading glasses | Finishing How to play |
+| | Sunglasses | Scoring 5,000 on Trinity Bay |
+| | Ski goggles | Making 100 deliveries in all |
+| Scarves & necklaces | Pink, white and green scarf | Finishing Capelin Scull |
+| | Newfoundland tartan scarf | Delivering a full 12-fish stack |
+| | Lucky horseshoe | Saving your puffling at the last second 5 times |
+| Boots | Rubber boots | Delivering 250 capelin in all |
+| | Knitted vamps | Playing 20 runs |
+| | Fisherman's boots | Finishing Cape St. Mary's |
+| Feathers | Golden puffin | Catching 50 golden capelin in all |
+
+Outfits live in `src/outfits.js`: each is one entry in `OUTFITS` with its slot, unlock test and look. Lifetime stats are saved in the browser (`capelin-run-stats`); levels finished before outfits existed count too.
 
 ## How to play
 
@@ -46,8 +71,10 @@ src/hunters.js    great black-backed gulls that hunt the puffin (Gull Island)
 src/whales.js     humpback whales that lunge up through a bubble ring (Trinity Bay)
 src/jaegers.js    jaegers that chase a puffin carrying fish and steal it (Cape St. Mary's, Iceberg Alley)
 src/icebergs.js   icebergs, mostly underwater, that knock your catch loose (Iceberg Alley)
+src/gannets.js    gannets that plunge-dive from above and knock your catch loose (Funk Island)
 src/finale.js     end-of-level zoom and crash landing at the home colony
 src/tutorial.js   the guided How to play run
+src/outfits.js    outfits: unlock tests, lifetime stats, and how each one is drawn
 src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edit the lines here)
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
@@ -56,7 +83,7 @@ tools/smoke-test.mjs  plays through every level, the tutorial and key failure ca
 
 The scripts are plain classic scripts that share globals, loaded in order, so the game runs straight from the file system.
 
-Testing: `UNLOCK_ALL` in `src/util.js` makes every level playable (currently on; set it to `false` before release). Shift+U on the level picker also unlocks everything.
+Testing: `UNLOCK_ALL` in `src/util.js` makes every level and outfit available (currently on; set it to `false` before release). Shift+U on the level picker also unlocks everything.
 
 ## Single-file build
 

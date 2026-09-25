@@ -21,10 +21,10 @@ const ctx = new Proxy({}, {
 });
 const els = {};
 const el = id => ({
-  id, hidden: id === 'say', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
+  id, hidden: id === 'say' || id === 'wardPanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
   children: [], offsetWidth: 1, parentElement: {},
   classList: { toggle() {}, add() {}, remove() {} },
-  querySelector: () => ({ style: {}, classList: { toggle() {}, remove() {} } }),
+  querySelector: () => ({ style: {}, focus() {}, classList: { toggle() {}, remove() {} } }),
   addEventListener(e, f) { this['on' + e] = f; }, appendChild(c) { this.children.push(c); },
   setAttribute() {}, focus() {}, blur() {}, getContext: () => ctx,
   getBoundingClientRect: () => ({ width: id === 'pvCanvas' ? 400 : 1200, height: id === 'pvCanvas' ? 300 : 700 }),
@@ -40,7 +40,7 @@ Object.assign(globalThis, {
   requestAnimationFrame: cb => { raf = cb; },
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 }
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, deliver, LEVELS };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds };');
 const T = globalThis.__T;
 const SEA = 270;
 
@@ -99,6 +99,48 @@ for (let i = 0; i < T.LEVELS.length; i++) {
   check(`level ${i + 1} (${T.LEVELS[i].name}) reaches home`, els.endTitle.textContent === 'Home by nightfall', `${Math.round(f / 60)}s`);
 }
 
+// 2b. Outfits: finishing every level is recorded, and earns the level outfits and the mummer
+const noRun = { level: T.LEVELS[0], deliveries: 0, fishDelivered: 0, goldCaught: 0, saves: 0, bestDrop: 0, fedFish: 0 };
+{
+  const stats = T.loadStats(), earned = id => T.outfitEarned(T.OUTFITS.find(o => o.id === id), stats);
+  check('finished levels are recorded', T.LEVELS.every(l => stats.done.includes(l.id)), stats.done.join(', '));
+  check('level outfits unlock', ['tricolour', 'souwester', 'fisherman', 'toque', 'captain', 'mummer'].every(earned));
+  check('stat outfits stay locked until earned', !earned('boots') && !earned('golden') && !earned('horseshoe') && !earned('reading'));
+  check('an outfit is only announced once', T.recordRun(noRun, true).length === 0);
+  const got = T.recordRun({ ...noRun, fishDelivered: 300, bestDrop: 12, deliveries: 100 }, false);
+  check('lifetime totals unlock outfits', got.map(o => o.id).sort().join() === 'boots,goggles,tartan', got.map(o => o.id).join());
+}
+// 2c. One of each slot, and every item draws in flight, underwater, landing and standing
+{
+  let ok = true;
+  for (const o of T.OUTFITS) {
+    T.wearOutfit(o.id);
+    try {
+      T.start(0); quiet(T.st); T.st.p.inv = 99;
+      for (let f = 0; f < 5; f++) frame();
+      T.st.p.y = SEA + 80; frame();
+      T.st.beak = [false, true]; T.deliver({ x: 400, w: 160, top: 130, used: false }); frame();
+    } catch (e) { ok = false; console.log('  ', o.id, e.message); }
+  }
+  check('every outfit draws in every pose', ok);
+  const look = T.wornLook();
+  check('one of each slot is worn at once', look.length === T.SLOTS.length && T.SLOTS.every(sl => look.some(o => o.slot === sl.id)), look.map(o => o.id).join());
+  T.wearOutfit('souwester');
+  check('wearing a hat swaps the hat only', T.wornIds().hat === 'souwester' && T.wornLook().length === T.SLOTS.length);
+  T.takeOff('hat');
+  check('taking off a hat leaves the rest', !T.wornIds().hat && T.wornLook().length === T.SLOTS.length - 1);
+  localStorage.setItem('capelin-run-outfit', 'captain');             // saved before slots existed
+  check('an outfit saved before slots still works', T.wornIds().hat === 'captain');
+  for (const sl of T.SLOTS) T.takeOff(sl.id);
+}
+// 2d. The wardrobe shows a row per slot with a "none" tile, and closes back to the level picker
+els.wardBtn.onclick();
+const rows = els.wardSlots.children;
+check('wardrobe shows a row per slot', !els.wardPanel.hidden && rows.length === T.SLOTS.length);
+check('each row has none plus its items', T.SLOTS.every((sl, i) => rows[i].children[1].children.length === 1 + T.OUTFITS.filter(o => o.slot === sl.id).length));
+els.wardDone.onclick();
+check('wardrobe closes to the level picker', els.wardPanel.hidden && !els.startPanel.hidden);
+
 // 3. Whale: swallowed in the ring near the surface, safe deep beneath it
 const whaleIdx = T.LEVELS.findIndex(l => l.whales);
 function whaleTrial(y) {
@@ -109,6 +151,39 @@ function whaleTrial(y) {
 }
 check('whale swallows a puffin in the ring', whaleTrial(SEA + 30) === 'Swallowed by a whale');
 check('diving deep passes under the whale', whaleTrial(SEA + 220) === 'survived');
+
+// 3b. Gannets: aimed at the puffin, a hit knocks the catch loose; far enough below, it can't reach
+const gannetIdx = T.LEVELS.findIndex(l => l.gannets);
+function gannetTrial(y, yAfterLock = y) {
+  T.start(gannetIdx); quiet(T.st); T.st.tGannet = 999; T.st.fish = []; T.st.tFish = 999;
+  T.st.p.inv = 0; T.st.beak = [false, false, false];
+  frame();                                              // puffin settles at its usual x
+  T.spawnGannet();
+  const g = T.st.gannets[0];
+  for (let f = 0; f < 60 * 5 && T.st.gannets.length; f++) {
+    const target = g.state === 'stalk' ? y : yAfterLock;
+    const p = T.st.p;
+    p.y += clamp(target - p.y, -5.5, 5.5); p.vy = 0; p.breath = 1;   // about the puffin's top speed
+    if (T.st.beak.length < 3) return 'hit';
+    frame();
+  }
+  return T.st.beak.length < 3 ? 'hit' : 'safe';
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const trials = n => Array.from({ length: n }, (_, i) => i);
+check('gannet hits a puffin that stays at its depth (air)', trials(5).every(() => gannetTrial(SEA - 70) === 'hit'));
+check('gannet hits a puffin that stays at its depth (underwater)', trials(5).every(() => gannetTrial(SEA + 60) === 'hit'));
+check('gannet reaches a puffin flying high', trials(5).every(() => gannetTrial(60) === 'hit'));
+check('changing depth after it locks on dodges it', trials(5).every(() => gannetTrial(SEA + 70, SEA - 70) === 'safe'));
+check('diving below the gannet is safe', trials(5).every(() => gannetTrial(SEA + 230) === 'safe'));
+{
+  T.start(gannetIdx); quiet(T.st); T.st.tGannet = 999; T.st.tFish = 999; T.st.p.inv = 99;
+  T.st.fish = [];
+  for (let k = 0; k < 6; k++) T.st.fish.push({ x: 700 + k * 12, y: SEA + 60, vx: -T.st.speed, ph: 0, amp: 0, gold: false });
+  T.st.gannets.push({ x: 700, y: 36, state: 'dive', t: 0, d: 0, ph: 0, splashed: false, ate: 0 });
+  for (let f = 0; f < 60; f++) frame();
+  check('a gannet plunge eats or scatters the school', T.st.fish.length < 6 && T.st.fish.some(x => Math.abs(x.y - (SEA + 60)) > 15));
+}
 
 // 4. The tutorial can be completed by following the cards
 els.howBtn.onclick();
@@ -130,6 +205,7 @@ for (let f = 0; f < 60 * 200 && T.running; f++) {
 }
 hold(false);
 check('tutorial completes', els.endTitle.textContent === "You're ready", els.endTitle.textContent);
+check('finishing the tutorial earns the reading glasses', els.unlockName.textContent.includes('reading glasses'), els.unlockName.textContent);
 
 const failed = results.filter(r => !r).length;
 console.log(failed ? `\n${failed} failed` : `\nAll ${results.length} passed`);

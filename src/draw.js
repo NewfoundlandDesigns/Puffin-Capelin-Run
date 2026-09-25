@@ -9,7 +9,10 @@ const PUF = {
   beak: '#f94a18', band: '#feb445', plate: '#6b7c90', foot: '#f94a18', ring: '#dc362c'
 };
 
+let curLook = null;                              // what the puffin being drawn is wearing (see drawPuffin)
+
 function puffinFoot(fx, fy, s) {                  // a webbed foot, toes pointing forward
+  if (curLook && curLook.boot) { drawBoot(fx, fy, s, curLook.boot); return; }
   ctx.beginPath();
   ctx.moveTo(fx - 2 * s, fy);
   ctx.quadraticCurveTo(fx + 3 * s, fy - 2.2 * s, fx + 7 * s, fy + 0.2 * s);
@@ -69,9 +72,22 @@ function puffinHead(beak) {
   ctx.strokeStyle = 'rgba(110,30,8,0.55)'; ctx.lineWidth = 0.6;                   // mouth line
   ctx.beginPath(); ctx.moveTo(21.5, -5.2); ctx.lineTo(33.6, -4.6); ctx.stroke();
   ctx.fillStyle = PUF.band; ell(21.4, -4.6, 1.3, 1.1);                             // rosette at the gape
+  if (curLook) for (const o of curLook.head) o.draw();                           // scarf, glasses, hat
 }
 
+// o.me: the player's puffin, which wears what's chosen in the wardrobe. o.look: wear these items
+// instead (previews). Outfits only change the look: feather colours, boots, and things worn on the head.
 function drawPuffin(x, y, sc, ang, o) {
+  const look = o.look !== undefined ? o.look : (o.me ? wornLook() : null);
+  if (!look || !look.length) { drawPuffinPose(x, y, sc, ang, o); return; }
+  const keep = { ...PUF }, boots = look.find(i => i.boot);
+  for (const i of look) if (i.colors) Object.assign(PUF, i.colors);
+  if (boots) PUF.foot = BOOTS[boots.boot].body;                  // legs and trailing feet in flight
+  curLook = { boot: boots && boots.boot, head: HEAD_ORDER.map(sl => look.find(i => i.slot === sl && i.draw)).filter(Boolean) };
+  try { drawPuffinPose(x, y, sc, ang, o); } finally { Object.assign(PUF, keep); curLook = null; }
+}
+
+function drawPuffinPose(x, y, sc, ang, o) {
   if (o.stand) { drawPuffinStanding(x, y, sc, ang - UPRIGHT, o); return; }
   ctx.save();
   ctx.translate(x, y);
@@ -133,12 +149,17 @@ function drawPuffinStanding(x, y, sc, lean, o) {
   const spread = o.wing === 'spread' || (o.lift || 0) > 0.5;
   ctx.save(); ctx.translate(x, y); ctx.scale(o.flip ? -sc : sc, sc);
   // legs and feet stay planted on the ground
-  ctx.strokeStyle = PUF.foot; ctx.fillStyle = PUF.foot; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
-  for (const [dx, ph] of [[-5, 0], [3.5, Math.PI]]) {
-    const up = o.step ? Math.max(0, Math.sin(o.step + ph)) * 3 : 0;
-    ctx.beginPath(); ctx.moveTo(dx, 11); ctx.lineTo(dx, 17 - up); ctx.stroke();
-    puffinFoot(dx - 0.5, 18.2 - up, 1);
-  }
+  const legs = () => {
+    ctx.strokeStyle = PUF.foot; ctx.fillStyle = PUF.foot; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    for (const [dx, ph] of [[-5, 0], [3.5, Math.PI]]) {
+      const up = o.step ? Math.max(0, Math.sin(o.step + ph)) * 3 : 0;
+      ctx.beginPath(); ctx.moveTo(dx, 11); ctx.lineTo(dx, 17 - up); ctx.stroke();
+      puffinFoot(dx - 0.5, 18.2 - up, 1);
+    }
+  };
+  const boots = curLook && curLook.boot;
+  if (!boots) legs();                              // boots go on last, over the bottom of the belly
+  ctx.save();
   // the body pivots over its feet
   ctx.translate(0, 18); ctx.rotate(lean); ctx.scale(o.sx || 1, o.sy || 1); ctx.translate(0, -18);
   const flap = Math.sin(o.flap || 0);
@@ -158,6 +179,8 @@ function drawPuffinStanding(x, y, sc, lean, o) {
     ctx.quadraticCurveTo(-4.2, 8.5, -2.8, -2); ctx.closePath(); ctx.fill();
   }
   ctx.save(); ctx.translate(-12, -10.5); puffinHead(o.beak); ctx.restore();    // head on top
+  ctx.restore();
+  if (boots) legs();
   ctx.restore();
 }
 
@@ -532,6 +555,34 @@ function drawBirdRock(off, cols, t, night) {
   }
 }
 
+// Funk Island: a low, flat granite island far offshore, white with nesting seabirds, gannets overhead
+function drawFunkIsland(off, cols, t, night) {
+  const period = 1600;
+  const first = Math.floor((off - 400) / period);
+  for (let n = first; n <= first + Math.ceil(VW / period) + 1; n++) {
+    const x0 = n * period - off + 200;
+    if (x0 > VW + 40 || x0 + 380 < -40) continue;
+    ctx.fillStyle = css(cols[0]);
+    ctx.beginPath(); ctx.moveTo(x0, SEA + 2); ctx.lineTo(x0 + 18, SEA - 20); ctx.quadraticCurveTo(x0 + 120, SEA - 34, x0 + 250, SEA - 30);
+    ctx.quadraticCurveTo(x0 + 330, SEA - 26, x0 + 350, SEA - 12); ctx.lineTo(x0 + 370, SEA + 2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = `rgba(245,248,250,${0.8 - night * 0.6})`;          // the colony: birds packed on the rock
+    for (let i = 0; i < 90; i++) {
+      const bx = x0 + 26 + ((i * 41) % 310), top = SEA - 26 - 6 * Math.sin((bx - x0) / 370 * Math.PI);
+      ell(bx, top + ((i * 17) % 12), 1.2, 0.9);
+    }
+    if (night < 0.9) {                                   // gannets wheeling over it
+      for (let i = 0; i < 14; i++) {
+        const a = t * (0.35 + (i % 4) * 0.08) + i * 1.9;
+        const gx = x0 + 180 + Math.cos(a) * (60 + (i * 31) % 150), gy = SEA - 70 + Math.sin(a * 1.3 + i) * 30;
+        const f = Math.sin(t * 4 + i) * 1.4;
+        ctx.strokeStyle = `rgba(250,250,250,${0.9 * (1 - night)})`; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(gx - 7, gy - f); ctx.lineTo(gx, gy); ctx.lineTo(gx + 7, gy - f); ctx.stroke();
+        ctx.fillStyle = `rgba(20,24,30,${0.9 * (1 - night)})`; ell(gx - 7, gy - f, 1, 1); ell(gx + 7, gy - f, 1, 1);
+      }
+    }
+  }
+}
+
 // Icebergs far off on the horizon
 function drawFarBergs(off, cols) {
   const period = 900;
@@ -618,6 +669,8 @@ function draw() {
     drawBirdRock(s.dist * 0.05, pal.hills, t, night);
     if (scene.fog) drawFog(pal.cloud, night);
     hills(s.dist * 0.15 + 900, css(pal.hills[1]), 12, 0.02, SEA + 1);
+  } else if (scene.far === 'funk') {
+    drawFunkIsland(s.dist * 0.04, pal.hills, t, night);
   } else if (scene.far === 'bergs') {
     drawFarBergs(s.dist * 0.04, pal.hills);
     if (scene.fog) drawFog(pal.cloud, night);
@@ -677,6 +730,7 @@ function draw() {
   for (const gl of s.gulls) drawGull(gl, t);
   for (const h of s.hunters) drawHunter(h, t);
   for (const j of s.jaegers) drawJaeger(j, t);
+  for (const g of s.gannets) drawGannet(g, t);
 
   // puffin, with a soft moonlit halo at night so it stays visible
   const under = p.y > SEA + 6;
@@ -689,10 +743,10 @@ function draw() {
   if (p.inv > 0 && p.inv < 5 && !s.landing && !s.finale && Math.floor(t * 12) % 2) ctx.globalAlpha = 0.45;   // blink after a hit
   const L = s.landing || s.finale;
   if (L) {
-    drawPuffin(p.x, p.y, 1, L.pose.ang, { ...L.pose, beak: s.beak, flap: p.flap });
+    drawPuffin(p.x, p.y, 1, L.pose.ang, { ...L.pose, beak: s.beak, flap: p.flap, me: true });
   } else {
     const ang = running ? (p.ang !== undefined ? p.ang : 0) : 0;
-    drawPuffin(p.x, p.y, 1, ang, { under, floating: !running, beak: s.beak, flap: p.flap });
+    drawPuffin(p.x, p.y, 1, ang, { under, floating: !running, beak: s.beak, flap: p.flap, me: true });
   }
   ctx.restore();
   if (L && L.pose.dizzy > 0) {

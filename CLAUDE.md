@@ -36,9 +36,11 @@ hunters.js   great black-backed gulls that swoop (fatal)
 whales.js    humpbacks: bubble-ring warning, lunge, swallow (fatal); drawn in two layers
 jaegers.js   pirate seabirds that steal a carried stack
 icebergs.js  drifting bergs, mostly underwater; bump knocks the stack loose
+gannets.js   plunge-diving gannets: shadow warning, spear dive aimed at puffin or a school
 finale.js    end-of-level zoom and crash landing at the home colony
 tutorial.js  guided How to play run (TUT_STEPS)
 chatter.js   puffling and puffin speech bubbles (edit the lines here)
+outfits.js   SLOTS and OUTFITS (unlock tests + looks), lifetime stats, what's worn, card drawing
 game.js      DOM refs, state (newState), update loop, spawning, collisions, HUD,
              level picker with live preview, start/end flow, input, main loop
 ```
@@ -55,6 +57,29 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
+  (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
+  as it dives away (`drawFluke`, harmless).
+- Outfits: looks only (Mark was clear: no gameplay effect). Five SLOTS (hat, glasses, neck,
+  boots, feathers), one item worn per slot; stored as JSON {slot: id} in capelin-run-outfit (an
+  old single id is migrated to its slot). Only the player's puffin wears them (`drawPuffin` with
+  `o.me`), not its mate. Head items (neck, glasses, hat, in HEAD_ORDER) draw in the head's own
+  coordinates at the end of `puffinHead`, so they follow every pose; feathers swap PUF colours;
+  boots replace `puffinFoot` (BOOTS styles) and draw over the belly when standing. Locked items
+  are greyed out in the Wardrobe with a hover/focus tooltip giving the unlock. Run stats go into
+  lifetime stats in `recordRun()` at `endGame` (and after the tutorial, for the reading
+  glasses). Seen items are stored so each is announced once. Keys: capelin-run-stats,
+  -outfit, -outfits-seen, -outfits-all.
+- Humpbacks: knobbly tubercles on the head outline, a pleated throat pouch that balloons
+  (`whalePouch`), long white flippers held out at the waterline, barnacles, and a fluke-up
+  as it dives away (`drawFluke`, harmless).
+- Outfits: looks only (Mark was clear: no gameplay effect), one worn at a time. Only the
+  player's puffin wears it (`drawPuffin` with `o.me`), not its mate. A head outfit draws in
+  the head's own coordinates at the end of `puffinHead`, so it follows every pose; `colors`
+  swaps PUF temporarily (golden); `boots` replaces `puffinFoot` (and draws over the belly when
+  standing). Run stats (`fishDelivered`, `saves`, `bestDrop`, `goldCaught`, `fedFish`) are added
+  to lifetime stats in `recordRun()` at `endGame`; the tutorial doesn't count. Seen outfits are
+  stored so each is announced once. Keys: capelin-run-stats, -outfit, -outfits-seen, -outfits-all.
 - Whales draw in two passes (`drawWhaleBack` before the puffin, `drawWhaleFront` after) so
   the jaws can close over a caught puffin.
 - The level picker preview draws the real scene by temporarily swapping `ctx`, `VW`, `S`,
@@ -75,11 +100,21 @@ Key ideas:
 
 ## Design decisions so far (and why)
 
-- Six levels, each adding one new foe plus a little of an earlier one, so early levels
+- Seven levels, each adding one new foe plus a little of an earlier one, so early levels
   stay approachable. Order: Capelin Scull (seals, thieving gulls), Gull Island (seals + a
   few hunting gulls), Baccalieu Tickle (more of both, storm), Cape St. Mary's (jaegers +
-  odd hunter), Iceberg Alley (bergs + a few jaegers), Trinity Bay (whales + a few seals).
-  Trinity Bay is last because whales are the hardest foe.
+  odd hunter), Iceberg Alley (bergs + a few jaegers), Trinity Bay (whales + a few seals),
+  Funk Island (gannets + a few whales). Funk Island is last because gannets plus whales is
+  the hardest mix.
+- Gannets (Funk Island): stalk -> lock -> dive. It stalks from just ahead and above the puffin
+  for `GANNET.STALK` s, following its depth; then locks on (cry, red shadow, nose-down) and
+  commits to the puffin's depth at that moment; `GANNET.LOCK` s later it dives straight down to
+  `GANNET.DEPTH` below the surface, timed to meet the puffin. The first version aimed at spawn
+  and at schools far ahead, so it was never a real threat (Mark's feedback). It dives from
+  above the puffin (`gannetTop`), so flying high isn't a hiding place. Only the bill and head
+  hit, so pulling up or down after the lock dodges it; so does diving below it. A hit only
+  costs the stack (like gulls/jaegers); a plunge eats up to 2 capelin and scatters the rest
+  (`f.dy`).
 - Whales are fatal, but only the head/mouth once it breaks the surface; diving below the
   shaded warning zone passes safely under. The warning zone matches the danger depth.
 - Hunger replaced the timer: 25 s for a full meter on levels 1 to 3, then 27, 28, 30.
@@ -95,7 +130,7 @@ Key ideas:
   burrow in; delivering in time saves the run. The puffling grows with fish fed
   (`st.fedFish`, `pufflingSize()`), in the HUD and the burrow, and its weight is on the end
   screen. Growth is cosmetic on purpose: Mark didn't want it to make the puffling hungrier.
-- Seal, hunting gull, and whale catches end the run; ordinary gulls, jaegers, icebergs and
+- Seal, hunting gull, and whale catches end the run; ordinary gulls, jaegers, gannets, icebergs and
   running out of air only cost the stack.
 
 ## Before release
