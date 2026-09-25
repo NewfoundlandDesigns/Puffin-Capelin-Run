@@ -51,6 +51,7 @@ src/tutorial.js   the guided How to play run
 src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edit the lines here)
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
+tools/smoke-test.mjs  plays through every level, the tutorial and key failure cases headlessly
 ```
 
 The scripts are plain classic scripts that share globals, loaded in order, so the game runs straight from the file system.
@@ -64,6 +65,14 @@ node tools/build.mjs
 ```
 
 Writes `dist/fun-puffin.html`, with all CSS and JS inlined. Handy for sharing or hosting as one file.
+
+## Testing
+
+```
+node tools/smoke-test.mjs
+```
+
+Builds the game and plays through every level to the finale, hunger running out, a whale catch and escape, and the tutorial, without a browser.
 
 ## Tuning
 
