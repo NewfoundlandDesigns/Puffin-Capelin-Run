@@ -79,8 +79,9 @@ Key ideas:
 - Seven levels, each adding one new foe plus a little of an earlier one, so early levels
   stay approachable. Order: Capelin Scull (seals, thieving gulls), Gull Island (seals + a
   few hunting gulls), Baccalieu Tickle (more of both, storm), Cape St. Mary's (jaegers +
-  odd hunter), Iceberg Alley (bergs + a few jaegers), Trinity Bay (whales + a few seals).
-  Trinity Bay (whales), then Funk Island (gannets + a few whales), now the hardest.
+  odd hunter), Iceberg Alley (bergs + a few jaegers), Trinity Bay (whales + a few seals),
+  Funk Island (gannets + a few whales). Funk Island is last because gannets plus whales is
+  the hardest mix.
 - Gannets (Funk Island): one circles above while its shadow slides in (`GANNET.WARN`), then
   dives straight down to `GANNET.DEPTH` below the surface. It's aimed at the puffin's depth at
   spawn (with some jitter) or, 45% of the time, at a school ahead, so it competes for fish.
