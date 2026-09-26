@@ -22,6 +22,16 @@ Each level has its own scenery: clear skies and rolling hills (Capelin Scull), o
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
 
+## Stars
+
+Every level has the same three stars, each for a different skill, and each is kept once earned:
+
+1. **Finish:** make it home by nightfall.
+2. **Feed:** make it home without your puffling's meter running out (no last chance needed).
+3. **Score:** reach the level's target (`starScore` in `src/levels.js`, set from the balance check to about what a good run that makes it home scores).
+
+The level picker shows each level's stars and your total; the end screen shows the three goals, lighting up new ones. Levels finished and best scores from before stars existed count. Stars also unlock outfits.
+
 ## Languages
 
 Beakful is in English and French (Canadian French, in the familiar "tu"). It picks French for browsers set to French, and a switch on the title screen changes it; the choice is remembered.
@@ -35,20 +45,24 @@ The level picker has a **Wardrobe**: outfits for your puffin, earned by playing.
 | Slot | Item | Earned by |
 |---|---|---|
 | Hats | Sou'wester | Finishing Baccalieu Tickle |
+| | Golden crown | Earning all 21 stars |
 | | Knitted toque | Finishing Iceberg Alley |
 | | Pitcher plant crown | Growing your puffling to full size in one run |
 | | Captain's cap | Finishing Funk Island |
 | | Mummer | Finishing all seven levels |
 | Glasses | Nan's reading glasses | Finishing How to play |
 | | Sunglasses | Scoring 5,000 on Trinity Bay |
+| | Star glasses | Earning 5 stars |
 | | Ski goggles | Making 100 deliveries in all |
 | Scarves & necklaces | Pink, white and green scarf | Finishing Capelin Scull |
 | | Newfoundland tartan scarf | Delivering a full 12-fish stack |
+| | Gold medal | Earning 10 stars |
 | | Lucky horseshoe | Saving your puffling at the last second 5 times |
 | Boots | Rubber boots | Delivering 250 capelin in all |
 | | Knitted vamps | Playing 20 runs |
 | | Fisherman's boots | Finishing Cape St. Mary's |
 | Feathers | Golden puffin | Catching 50 golden capelin in all |
+| | Northern lights feathers | Earning 15 stars |
 
 Outfits live in `src/outfits.js`: each is one entry in `OUTFITS` with its slot, unlock test and look. Lifetime stats are saved in the browser (`capelin-run-stats`); levels finished before outfits existed count too.
 
@@ -81,11 +95,14 @@ src/icebergs.js   icebergs, mostly underwater, that knock your catch loose (Iceb
 src/gannets.js    gannets that plunge-dive from above and knock your catch loose (Funk Island)
 src/finale.js     end-of-level zoom and crash landing at the home colony
 src/tutorial.js   the guided How to play run
+src/stars.js      the three stars per level: what earns them, and how they're saved
 src/outfits.js    outfits: unlock tests, lifetime stats, and how each one is drawn
 src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edit the lines here)
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
 tools/smoke-test.mjs  plays through every level, the tutorial and key failure cases headlessly
+tools/balance.mjs     automated players run every level many times and report scores and how runs end
+tools/harness.mjs     the headless game setup shared by the smoke test and balance check
 tools/make-art.mjs    renders the phone icons and share image into assets/
 assets/           icon, share image, and the bundled DM Sans font
 ```
@@ -117,6 +134,14 @@ node tools/smoke-test.mjs
 ```
 
 Builds the game and plays through every level to the finale, hunger running out, a whale catch and escape, and the tutorial, without a browser.
+
+## Balance check
+
+```
+node tools/balance.mjs [runs per level]
+```
+
+Two automated players (a good one and a casual one) play every level many times and report how often they make it home, score percentiles, what ended their runs, and what cost them their catch. Use it before and after tuning. The players are simple, so treat the results as a guide alongside real playtests.
 
 ## Tuning
 

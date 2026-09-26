@@ -9,7 +9,8 @@ const hGhost = $('hGhost'), hSub = $('hSub'), hChick = hunger.querySelector('.ch
 const startPanel = $('startPanel'), endPanel = $('endPanel');
 const againBtn = $('againBtn'), nextBtn = $('nextBtn'), chooseBtn = $('chooseBtn'), muteBtn = $('muteBtn'), playBtn = $('playBtn');
 const preview = $('preview'), pvCanvas = $('pvCanvas'), pvCtx = pvCanvas.getContext('2d');
-const pvNum = $('pvNum'), pvName = $('pvName'), pvBest = $('pvBest'), pvBlurb = $('pvBlurb');
+const pvNum = $('pvNum'), pvName = $('pvName'), pvBest = $('pvBest'), pvBlurb = $('pvBlurb'), pvStars = $('pvStars'), pvTotal = $('pvTotal');
+const endStars = $('endStars');
 const howBtn = $('howBtn'), tut = $('tut'), tutCard = $('tutCard'), tutStep = $('tutStep'), tutTitle = $('tutTitle');
 const tutText = $('tutText'), tutHint = $('tutHint'), tutTimer = $('tutTimer'), tutSkip = $('tutSkip');
 const lvDots = $('lvDots'), prevLv = $('prevLv'), nextLv = $('nextLv'), pvLock = $('pvLock');
@@ -28,7 +29,7 @@ function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
   return {
     levelIdx, level,
     t: 0, anim: 0, speed: 160, dist: 0, progress: 0, idleU,
-    hunger: 0.7, lowBeep: 0, feedQ: [], tGulp: 0, gulpN: 0, full: 0, starving: 0, fedFish: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
+    hunger: 0.7, minHunger: 1, lowBeep: 0, feedQ: [], tGulp: 0, gulpN: 0, full: 0, starving: 0, fedFish: 0, chat: { sayHide: 0, nextNag: 0.4, peckish: false, last: '', air: null, airT: 0, airLast: '', phew: 0 }, homeSpawned: false, finale: null, cam: null, bonus: 0,
     p: { x: 200, y: SEA - 6, vy: 0, flap: 0, inv: 0, breath: 1, gasp: false, wasUnder: false },
     beak: [], score: 0, deliveries: 0, fishDelivered: 0, saves: 0, biggest: 0, goldCaught: 0, bestDrop: 0, fullWarned: false,
     fish: [], gulls: [], seals: [], hunters: [], whales: [], jaegers: [], gannets: [], bergs: [], cliffs: [], parts: [], pops: [],
@@ -263,6 +264,7 @@ function update(dt) {
     else s.hunger = Math.max(tutorial ? 0.3 : 0, s.hunger - wdt / s.level.hungerSeconds);
   }
   updateFeeding(dt);
+  if (!tutorial) s.minHunger = Math.min(s.minHunger, s.hunger);
   if (s.hunger < 0.2) { s.lowBeep -= dt; if (s.lowBeep <= 0) { Snd.chirp(); s.lowBeep = s.starving > 0 ? 0.5 : 1.3; } }
   updateChatter(dt);
   // Out of food: a last chance to reach a burrow. It waits while fish are on their way in.
@@ -455,8 +457,8 @@ function updateHud() {
   hunger.classList.toggle('full', st.full > 0);
   hunger.classList.toggle('starving', st.starving > 0);
   hSub.style.width = (st.starving > 0 ? st.starving / LAST_CHANCE : st.full / FULL_MAX) * 100 + '%';
-  hunger.classList.toggle('mid', st.hunger < 0.5 && st.hunger >= 0.2);
-  hunger.classList.toggle('low', st.hunger < 0.2);
+  hunger.classList.toggle('mid', st.hunger < 0.5 && st.hunger >= HUNGER_RED);
+  hunger.classList.toggle('low', st.hunger < HUNGER_RED);
   // the puffling grows as it's fed
   const size = Math.round(30 * pufflingSize()) + 'px';
   if (hChick.style.width !== size) { hChick.style.width = size; hChick.style.height = size; }
@@ -522,6 +524,11 @@ function renderPicker(dir) {
   pvName.textContent = lvName(lv);
   pvBlurb.textContent = lvBlurb(lv);
   pvBest.hidden = !best; pvBest.textContent = best ? t('picker.best', { score: fmtNum(best) }) : '';
+  const stats = loadStats(), bits = starsFor(lv, stats), total = totalStars(stats);
+  pvStars.innerHTML = STAR_BITS.map(b => starSvg(bits & b)).join('');
+  pvStars.setAttribute('aria-label', t('stars.of', { n: starCount(bits) })); pvStars.setAttribute('role', 'img');
+  pvTotal.innerHTML = starSvg(true) + `<span>${total}/${maxStars()}</span>`;
+  pvTotal.setAttribute('aria-label', t('stars.total', { n: total, total: maxStars() })); pvTotal.setAttribute('role', 'img');
   const locked = isLocked(selected);
   preview.classList.toggle('locked', locked);
   pvLock.hidden = !locked;
@@ -599,6 +606,7 @@ function endGame(reason) {
   nextBtn.dataset.level = next;
   if (next >= 0) nextBtn.textContent = t('end.next', { name: lvName(LEVELS[next]) });
   againBtn.className = next >= 0 ? 'secondary' : 'primary';
+  showStars(st.level, recordStars(st, complete));    // before outfits, so stars can unlock them
   const fresh = recordRun(st, complete);             // outfits earned this run
   endBest.innerHTML = isBest && score > 0 ? `<span class="newbest">${t('end.newBest')}</span>` : t('end.best', { n: fmtNum(Math.max(best, score)) });
   hud.hidden = true; endPanel.hidden = false;
@@ -606,6 +614,22 @@ function endGame(reason) {
   const keepParts = st.parts, keepPops = st.pops;
   st = newState(1, currentLevel); st.parts = keepParts; st.pops = keepPops;
   (next >= 0 ? nextBtn : againBtn).focus({ preventScroll: true });
+}
+
+/* ---------- stars on the end screen: each goal, lit if earned, "New" if earned this run ---------- */
+function showStars(lv, res) {
+  const goals = [t('stars.home'), t('stars.feed'), t('stars.score', { n: fmtNum(lv.starScore) })];
+  endStars.innerHTML = '';
+  STAR_BITS.forEach((b, i) => {
+    const li = document.createElement('li'), got = res.after & b, fresh = got && !(res.before & b);
+    li.className = (got ? 'got' : '') + (fresh ? ' new' : '');
+    li.innerHTML = starSvg(got);
+    const span = document.createElement('span'); span.textContent = goals[i]; li.appendChild(span);
+    if (fresh) { const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = t('stars.new'); li.appendChild(tag); }
+    endStars.appendChild(li);
+  });
+  endStars.hidden = false;
+  if (res.after !== res.before) Snd.phase();
 }
 
 /* ---------- outfit unlocks on the end screen ---------- */

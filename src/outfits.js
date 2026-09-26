@@ -95,6 +95,48 @@ function drawGoggles() {                        // ski goggles: a strap round th
   ctx.fillStyle = 'rgba(255,255,255,0.65)'; ell(17.6, -8.3, 1.2, 0.6, -0.4);
 }
 
+// A five-pointed star path centred on x, y
+function starPath(x, y, r, inner = 0.45) {
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * inner : r;
+    ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+  }
+  ctx.closePath();
+}
+
+function drawStarGlasses() {                    // star-shaped party glasses, for 5 stars
+  ctx.strokeStyle = '#dc362c'; ctx.lineWidth = 0.8; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(15.2, -7.4); ctx.lineTo(7, -7.8); ctx.moveTo(21.8, -7); ctx.lineTo(22.6, -7.4); ctx.stroke();
+  starPath(18.4, -6.6, 4.4); ctx.fillStyle = '#dc362c'; ctx.fill();
+  starPath(18.4, -6.6, 3.2); ctx.fillStyle = 'rgba(254,180,69,0.8)'; ctx.fill();
+  ctx.fillStyle = '#10233d'; ell(18.2, -6.5, 1.2, 1.2);
+  ctx.fillStyle = '#ffffff'; ell(17.2, -7.9, 0.6, 0.4);
+}
+
+function drawGoldMedal() {                      // a gold medal on a ribbon, for 10 stars
+  ctx.fillStyle = '#10233d';
+  ctx.beginPath(); ctx.moveTo(9, 0.5); ctx.lineTo(13.6, 7.2); ctx.lineTo(15.6, 7.2); ctx.lineTo(12, 0.8); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#f94a18';
+  ctx.beginPath(); ctx.moveTo(20.5, 0.2); ctx.lineTo(16.2, 7.2); ctx.lineTo(14.2, 7.2); ctx.lineTo(17.6, 0.6); ctx.closePath(); ctx.fill();
+  ctx.save(); ctx.translate(14.9, 10); ctx.rotate(Math.sin((st.anim || 0) * 4) * 0.1);
+  ctx.fillStyle = '#d98a1a'; ell(0, 0, 3.6, 3.6);
+  ctx.fillStyle = '#feb445'; ell(0, 0, 2.9, 2.9);
+  starPath(0, 0.1, 1.9); ctx.fillStyle = '#d98a1a'; ctx.fill();
+  ctx.restore();
+}
+
+function drawGoldenCrown() {                    // the golden crown, for all 21 stars
+  ctx.fillStyle = '#feb445';
+  ctx.beginPath(); ctx.moveTo(5.5, -11.5); ctx.lineTo(5, -21); ctx.lineTo(9, -16.5); ctx.lineTo(12, -23.5); ctx.lineTo(15, -16.5);
+  ctx.lineTo(19, -23.5); ctx.lineTo(21, -16.5); ctx.lineTo(24, -21); ctx.lineTo(23, -11.5); ctx.quadraticCurveTo(14, -13.4, 5.5, -11.5); ctx.fill();
+  ctx.fillStyle = '#d98a1a';
+  ctx.beginPath(); ctx.moveTo(5.4, -12); ctx.quadraticCurveTo(14, -14, 23.2, -12); ctx.lineTo(23.1, -14.4); ctx.quadraticCurveTo(14, -16.2, 5.3, -14.4); ctx.fill();
+  ctx.fillStyle = '#dc362c'; ell(9.5, -13.2, 1.1, 0.9); ell(19, -13.2, 1.1, 0.9);
+  ctx.fillStyle = '#3b7dd8'; ell(14.3, -13.5, 1.3, 1);
+  ctx.fillStyle = '#fff6df'; for (const [x, y] of [[5, -21], [12, -23.5], [19, -23.5], [24, -21]]) ell(x, y, 1, 1);
+}
+
 function drawPitcherCrown() {                   // a ring of pitcher plants, the provincial flower
   ctx.strokeStyle = '#4f7a3a'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(5, -12); ctx.quadraticCurveTo(14, -18.5, 23, -12); ctx.stroke();
@@ -189,14 +231,17 @@ const OUTFITS = [
   { id: 'toque', slot: 'hat', name: 'Knitted toque', unlock: 'Finish Iceberg Alley.', has: s => s.done.includes('iceberg-alley'), draw: drawToque },
   { id: 'crown', slot: 'hat', name: 'Pitcher plant crown', unlock: 'Grow your puffling to full size in one run.', has: s => s.fullGrown, draw: drawPitcherCrown },
   { id: 'captain', slot: 'hat', name: 'Captain\u2019s cap', unlock: 'Finish Funk Island.', has: s => s.done.includes('funk-island'), draw: drawCaptainsCap },
+  { id: 'goldcrown', slot: 'hat', name: 'Golden crown', unlock: 'Earn all 21 stars.', has: s => s.stars >= maxStars(), draw: drawGoldenCrown },
   { id: 'mummer', slot: 'hat', name: 'Mummer', unlock: 'Finish all seven levels.', has: s => LEVELS.every(l => s.done.includes(l.id)), draw: drawMummer },
   // glasses
   { id: 'reading', slot: 'glasses', name: 'Nan\u2019s reading glasses', unlock: 'Finish How to play.', has: s => s.tutorial, draw: drawReadingGlasses },
   { id: 'shades', slot: 'glasses', name: 'Sunglasses', unlock: 'Score 5,000 on Trinity Bay.', has: () => bestFor(LEVELS.find(l => l.id === 'trinity-bay')) >= 5000, draw: drawSunglasses },
+  { id: 'starglasses', slot: 'glasses', name: 'Star glasses', unlock: 'Earn 5 stars.', has: s => s.stars >= 5, draw: drawStarGlasses },
   { id: 'goggles', slot: 'glasses', name: 'Ski goggles', unlock: 'Make 100 deliveries in all.', has: s => s.deliveries >= 100, draw: drawGoggles },
   // scarves & necklaces
   { id: 'tricolour', slot: 'neck', name: 'Pink, white and green scarf', unlock: 'Finish Capelin Scull.', has: s => s.done.includes('capelin-scull'), draw: drawTricolourScarf },
   { id: 'tartan', slot: 'neck', name: 'Newfoundland tartan scarf', unlock: 'Deliver a full 12-fish stack.', has: s => s.bigDrop >= MAX_STACK, draw: drawTartanScarf },
+  { id: 'medal', slot: 'neck', name: 'Gold medal', unlock: 'Earn 10 stars.', has: s => s.stars >= 10, draw: drawGoldMedal },
   { id: 'horseshoe', slot: 'neck', name: 'Lucky horseshoe', unlock: 'Save your puffling at the last second 5 times.', has: s => s.saves >= 5, draw: drawHorseshoe },
   // boots
   { id: 'boots', slot: 'boots', name: 'Rubber boots', unlock: 'Deliver 250 capelin in all.', has: s => s.fish >= 250, boot: 'rubber' },
@@ -204,7 +249,9 @@ const OUTFITS = [
   { id: 'fisherman', slot: 'boots', name: 'Fisherman\u2019s boots', unlock: 'Finish Cape St. Mary\u2019s.', has: s => s.done.includes('cape-st-marys'), boot: 'yellow' },
   // feathers
   { id: 'golden', slot: 'feathers', name: 'Golden puffin', unlock: 'Catch 50 golden capelin in all.', has: s => s.gold >= 50,
-    colors: { back: '#b8862b', far: '#8f6519', face: '#fbf1d4', belly: '#fff6df' } }
+    colors: { back: '#b8862b', far: '#8f6519', face: '#fbf1d4', belly: '#fff6df' } },
+  { id: 'aurora', slot: 'feathers', name: 'Northern lights feathers', unlock: 'Earn 15 stars.', has: s => s.stars >= 15,
+    colors: { back: '#1d6b57', far: '#5a3a8a', face: '#e6f4ee', belly: '#effbf5' } }
 ];
 const HEAD_ORDER = ['neck', 'glasses', 'hat'];     // drawn in this order, so a hat sits over glasses' arms
 
@@ -217,8 +264,10 @@ function loadStats() {
   const done = Array.isArray(s.done) ? s.done.slice() : [];
   // levels finished before outfits existed: every level below the unlocked one was finished
   for (const l of LEVELS.slice(0, unlockedUpTo())) if (!done.includes(l.id)) done.push(l.id);
-  return { fish: s.fish || 0, gold: s.gold || 0, saves: s.saves || 0, bigDrop: s.bigDrop || 0, fullGrown: !!s.fullGrown,
+  const out = { fish: s.fish || 0, gold: s.gold || 0, saves: s.saves || 0, bigDrop: s.bigDrop || 0, fullGrown: !!s.fullGrown,
     runs: s.runs || 0, deliveries: s.deliveries || 0, tutorial: tutorialDone(), done };
+  out.stars = totalStars(out);
+  return out;
 }
 
 const outfitEarned = (o, s = loadStats()) => !!o.has(s);
@@ -234,7 +283,8 @@ function recordRun(run, complete) {
     s.fullGrown = s.fullGrown || run.fedFish >= GROW_FISH;
     if (complete && !s.done.includes(run.level.id)) s.done.push(run.level.id);
   }
-  const { tutorial, ...keep } = s;
+  s.stars = totalStars(s);                         // stars were recorded just before this
+  const { tutorial, stars, ...keep } = s;
   store.set(STATS_KEY, JSON.stringify(keep));
   let seen = [];
   try { seen = JSON.parse(store.get(SEEN_KEY) || '[]') || []; } catch (e) { seen = []; }

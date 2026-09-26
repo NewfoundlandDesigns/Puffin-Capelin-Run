@@ -268,3 +268,27 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
   background:transparent;color:var(--card-muted);border:1.5px solid transparent;
 }
 .lang button[aria-pressed="true"]{color:var(--card-ink);border-color:currentColor}
+
+/* ---------- stars ---------- */
+.star{width:18px;height:18px;flex:none}
+.star path{fill:none;stroke:rgba(255,255,255,0.7);stroke-width:1.6;stroke-linejoin:round}
+.star.lit path{fill:var(--amber);stroke:var(--amber)}
+.pv-stars{display:flex;gap:3px;margin-top:4px}
+.pv-total{
+  position:absolute;top:10px;left:10px;padding:5px 10px;border-radius:999px;display:flex;align-items:center;gap:4px;
+  background:rgba(5,13,24,0.6);color:#fff;font-size:0.8rem;font-weight:700;font-variant-numeric:tabular-nums;pointer-events:none;
+}
+.pv-total .star{width:14px;height:14px}
+.stars{list-style:none;margin:2px 0 12px;padding:0;display:flex;flex-direction:column;gap:6px}
+.stars[hidden]{display:none}
+.stars li{display:flex;align-items:center;gap:10px;font-size:0.92rem;line-height:1.25;color:var(--card-muted)}
+.stars li.got{color:var(--card-ink);font-weight:700}
+.stars .star{width:24px;height:24px}
+.stars .star path{stroke:rgba(68,84,106,0.55)}
+.stars .star.lit path{stroke:#d98a1a}
+.stars li.new .star{animation:starPop .5s cubic-bezier(.3,1.7,.5,1) both}
+.stars li.new:nth-child(2) .star{animation-delay:.25s}
+.stars li.new:nth-child(3) .star{animation-delay:.5s}
+.stars .tag{margin-left:auto;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--orange-strong)}
+@keyframes starPop{0%{transform:scale(0) rotate(-40deg)}100%{transform:none}}
+@media (prefers-reduced-motion: reduce){.stars li.new .star{animation:none}}
