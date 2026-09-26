@@ -86,6 +86,8 @@ src/chatter.js    what the hungry puffling and the out-of-breath puffin say (edi
 src/game.js       game state, spawning, collisions, scoring, input and the main loop
 tools/build.mjs   bundles everything into one self-contained HTML file
 tools/smoke-test.mjs  plays through every level, the tutorial and key failure cases headlessly
+tools/balance.mjs     automated players run every level many times and report scores and how runs end
+tools/harness.mjs     the headless game setup shared by the smoke test and balance check
 tools/make-art.mjs    renders the phone icons and share image into assets/
 assets/           icon, share image, and the bundled DM Sans font
 ```
@@ -117,6 +119,14 @@ node tools/smoke-test.mjs
 ```
 
 Builds the game and plays through every level to the finale, hunger running out, a whale catch and escape, and the tutorial, without a browser.
+
+## Balance check
+
+```
+node tools/balance.mjs [runs per level]
+```
+
+Two automated players (a good one and a casual one) play every level many times and report how often they make it home, score percentiles, what ended their runs, and what cost them their catch. Use it before and after tuning. The players are simple, so treat the results as a guide alongside real playtests.
 
 ## Tuning
 
