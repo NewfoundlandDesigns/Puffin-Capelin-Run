@@ -23,7 +23,11 @@ const el = id => ({
   id, hidden: id === 'say' || id === 'wardPanel' || id === 'pausePanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '',
   _html: '', get innerHTML() { return this._html; }, set innerHTML(v) { this._html = v; this.children = []; },   // like the DOM: replaces the children
   children: [], offsetWidth: 1, parentElement: {},
-  classList: { toggle() {}, add() {}, remove() {} },
+  classList: (() => {                                   // tracks classes, like the DOM
+    const c = new Set();
+    return { add: (...x) => x.forEach(k => c.add(k)), remove: (...x) => x.forEach(k => c.delete(k)), contains: k => c.has(k),
+      toggle: (k, on) => { const v = on === undefined ? !c.has(k) : !!on; if (v) c.add(k); else c.delete(k); return v; } };
+  })(),
   querySelector: () => ({ style: {}, focus() {}, classList: { toggle() {}, remove() {} } }),
   addEventListener(e, f) { this['on' + e] = f; }, appendChild(c) { this.children.push(c); },
   setAttribute() {}, focus() {}, blur() {}, getContext: () => ctx,

@@ -24,9 +24,10 @@ const totalStars = (stats = loadStats()) => { const saved = loadStarBits(); retu
 const maxStars = () => LEVELS.length * 3;
 
 // Called at the end of a run, before outfits are checked, so stars can unlock them.
-// Returns what this level had before and has now.
-function recordStars(run, complete) {
-  const lv = run.level, before = starsFor(lv);
+// Returns what this level had before and has now. Pass before if the best score has already been
+// saved for this run (a best score at the target counts as the Score star, so it'd look old).
+function recordStars(run, complete, before = starsFor(run.level)) {
+  const lv = run.level;
   let got = 0;
   if (complete) got |= 1;
   if (complete && run.minHunger > 0) got |= 2;

@@ -62,6 +62,11 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Instant retry (Mark liked Geometry Dash's quick restarts): a loss with no new star or outfit
+  gets the compact card (#endPanel.quick); tap anywhere but a button, or Space, restarts after
+  `retryLock` (0.45 s). Held-key repeats are ignored so releasing a held Space doesn't restart.
+  Best distance per level: capelin-run-far-<id> (a finished level counts as 100%); attempts:
+  capelin-run-attempts.
 - Stars (stars.js): finish / feed / score, the same on every level, stored as a bit mask per
   level (capelin-run-stars) and kept once earned. Feed = made it home and minHunger > 0 (never
   needed a last chance); "never in the red" was tried and the balance check showed it was near

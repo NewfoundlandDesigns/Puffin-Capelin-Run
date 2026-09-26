@@ -292,3 +292,17 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .stars .tag{margin-left:auto;font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--orange-strong)}
 @keyframes starPop{0%{transform:scale(0) rotate(-40deg)}100%{transform:none}}
 @media (prefers-reduced-motion: reduce){.stars li.new .star{animation:none}}
+
+/* ---------- instant retry: after a loss with nothing new, a compact card; tap anywhere to go again ---------- */
+.far{margin:0 0 12px}
+.far[hidden]{display:none}
+.far-bar{position:relative;height:8px;border-radius:999px;background:rgba(68,84,106,0.18);overflow:visible}
+.far-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--orange-strong)}
+.far-best{position:absolute;top:-4px;width:3px;height:16px;border-radius:2px;background:var(--card-ink);transform:translateX(-50%)}
+.panel .far-text{margin:6px 0 0;font-size:0.9rem;color:var(--card-muted);font-variant-numeric:tabular-nums}
+.panel .far-text.new{color:var(--orange-strong);font-weight:700}
+.panel .retry-hint{margin:4px 0 0;font-size:0.9rem;font-weight:700;color:var(--card-ink)}
+.retry-hint[hidden]{display:none}
+#endPanel.quick #endStats,#endPanel.quick #endStars,#endPanel.quick .keys{display:none}
+#endPanel.quick h2{font-size:clamp(2rem,7vw,2.6rem)}
+#endPanel.quick .big{font-size:2.6rem}

@@ -210,6 +210,40 @@ T.start(0); quiet(T.st);
 for (let f = 0; f < 60 * 200 && !ended(); f++) { T.st.p.inv = Math.max(T.st.p.inv, 2); T.st.hunger = 1; frame(); }
 check('a level finished well shows two stars at the end', els.endStars.children.length === 3 && !els.endStars.hidden && T.starsFor(T.LEVELS[0]) & 3, `bits ${T.starsFor(T.LEVELS[0])}`);
 
+// 4d. Instant retry: a plain loss gets the compact card; tap anywhere (after a moment) or Space goes again
+{
+  const { resetStore } = await import('./harness.mjs');
+  resetStore();
+  const tap = () => els.stage.onpointerdown({ target: { closest: () => null }, preventDefault() {} });
+  const loseAt = progress => {
+    T.start(0); quiet(T.st); T.st.p.inv = 99;
+    for (let f = 0; f < 5; f++) frame();
+    T.st.dist = progress * 23700; T.st.progress = progress; T.st.hunger = 0.0001; T.st.starving = 0.01;
+    for (let f = 0; f < 60 * 4 && !ended(); f++) frame();
+  };
+  loseAt(0.3);
+  check('a plain loss shows the compact try-again card', ended() && els.endPanel.classList.contains('quick') && !els.retryHint.hidden);
+  check('it counts attempts', /Attempt 1$/.test(els.endLevel.textContent), els.endLevel.textContent);
+  tap();
+  check('a tap the moment the card appears is ignored', ended() && !T.running);
+  for (let f = 0; f < 40; f++) frame();
+  tap();
+  check('a tap after that goes straight back in', T.running && els.endPanel.hidden);
+  loseAt(0.5);
+  check('best distance is saved', /farthest yet/.test(els.farText.textContent), els.farText.textContent);
+  for (let f = 0; f < 40; f++) frame();
+  key('Space'); key('Space', false);
+  check('Space also goes straight back in', T.running && /Attempt 3$/.test(els.endLevel.textContent));
+  loseAt(0.2);
+  check('a worse run shows your best to beat', els.farText.textContent.includes('best 50%'), els.farText.textContent);
+  // a loss that earns something new still shows the full results
+  T.start(0); quiet(T.st); T.st.p.inv = 99; for (let f = 0; f < 5; f++) frame();
+  T.st.score = T.LEVELS[0].starScore; T.st.hunger = 0.0001; T.st.starving = 0.01;
+  for (let f = 0; f < 60 * 4 && !ended(); f++) frame();
+  check('a loss that earns a star shows the full results', ended() && !els.endPanel.classList.contains('quick') && els.retryHint.hidden);
+  resetStore();
+}
+
 // 5. French: every English text has a French version, all game data is translated, and a run
 //    played in French shows French
 {
