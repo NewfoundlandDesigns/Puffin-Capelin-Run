@@ -101,6 +101,10 @@
     <p class="lvl" id="endLevel"></p>
     <h2 id="endTitle" data-i18n="end.nightFalls">Night falls</h2>
     <p class="big" id="endScore">0</p>
+    <div class="far" id="endFar" hidden>
+      <div class="far-bar" aria-hidden="true"><div class="far-fill" id="farFill"></div><div class="far-best" id="farBest"></div></div>
+      <p class="far-text" id="farText"></p>
+    </div>
     <ul class="stars" id="endStars" hidden></ul>
     <p id="endStats"></p>
     <p id="endBest" class="small"></p>
@@ -109,6 +113,7 @@
       <div class="unlock-text"><span class="unlock-k">New outfit</span><strong id="unlockName"></strong><span class="unlock-more" id="unlockMore"></span></div>
       <button class="secondary wear" id="wearBtn" type="button">Wear it</button>
     </div>
+    <p class="retry-hint" id="retryHint" hidden></p>
     <div class="actions">
       <button id="nextBtn" class="primary" type="button" hidden data-i18n="end.nextLevel">Next level</button>
       <button id="againBtn" class="primary" type="button">Play again</button>

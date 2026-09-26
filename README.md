@@ -22,6 +22,10 @@ Each level has its own scenery: clear skies and rolling hills (Capelin Scull), o
 
 Levels are defined in `src/levels.js` (name, scene, hazards) and scenes in `src/palette.js`; adding a level is a new entry in each.
 
+## Trying again
+
+After a loss with nothing new earned, a compact card shows what caught you, your score, how far you got against your best distance, and the attempt number. Tap anywhere or press Space to go straight back in. There's a short pause first, so a press from the moment you were caught doesn't restart you by accident. Finishing a level, or earning a star or outfit, gets the full results instead. The level picker shows your best distance next to your best score.
+
 ## Stars
 
 Every level has the same three stars, each for a different skill, and each is kept once earned:

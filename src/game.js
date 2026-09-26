@@ -10,7 +10,7 @@ const startPanel = $('startPanel'), endPanel = $('endPanel');
 const againBtn = $('againBtn'), nextBtn = $('nextBtn'), chooseBtn = $('chooseBtn'), muteBtn = $('muteBtn'), playBtn = $('playBtn');
 const preview = $('preview'), pvCanvas = $('pvCanvas'), pvCtx = pvCanvas.getContext('2d');
 const pvNum = $('pvNum'), pvName = $('pvName'), pvBest = $('pvBest'), pvBlurb = $('pvBlurb'), pvStars = $('pvStars'), pvTotal = $('pvTotal');
-const endStars = $('endStars');
+const endStars = $('endStars'), endFar = $('endFar'), farFill = $('farFill'), farBest = $('farBest'), farText = $('farText'), retryHint = $('retryHint');
 const howBtn = $('howBtn'), tut = $('tut'), tutCard = $('tutCard'), tutStep = $('tutStep'), tutTitle = $('tutTitle');
 const tutText = $('tutText'), tutHint = $('tutHint'), tutTimer = $('tutTimer'), tutSkip = $('tutSkip');
 const lvDots = $('lvDots'), prevLv = $('prevLv'), nextLv = $('nextLv'), pvLock = $('pvLock');
@@ -23,6 +23,7 @@ const endLevel = $('endLevel'), endTitle = $('endTitle'), endScore = $('endScore
 /* ================= STATE ================= */
 let W = 0, H = 0, S = 1, VW = 800, dpr = 1;
 let running = false, holding = false, last = 0, paused = false;
+let quickRetry = false, retryLock = 0;   // the compact try-again card after a loss, and a moment before it accepts a tap
 
 function newState(idleU = 0, levelIdx = 0, levelOverride = null) {
   const level = levelOverride || LEVELS[levelIdx];
@@ -471,6 +472,15 @@ function bestFor(lv) {
   if (v === null && lv === LEVELS[0]) v = store.get('capelin-run-best');   // scores from before levels existed
   return Number(v) || 0;
 }
+// Best distance (0..1) and attempts per level
+const farKey = lv => 'capelin-run-far-' + lv.id;
+const farFor = (lv, stats) => ((stats || loadStats()).done.includes(lv.id) ? 1 : clamp(Number(store.get(farKey(lv))) || 0, 0, 1));
+function attemptsFor(lv) { try { return (JSON.parse(store.get('capelin-run-attempts') || '{}') || {})[lv.id] || 0; } catch (e) { return 0; } }
+function countAttempt(lv) {
+  let a = {}; try { a = JSON.parse(store.get('capelin-run-attempts') || '{}') || {}; } catch (e) { a = {}; }
+  a[lv.id] = (a[lv.id] || 0) + 1; store.set('capelin-run-attempts', JSON.stringify(a));
+}
+const pctOf = f => Math.floor(f * 100);
 const unlockedUpTo = () => clamp(Number(store.get('capelin-run-unlocked')) || 0, 0, LEVELS.length - 1);
 const isLocked = i => !UNLOCK_ALL && i > unlockedUpTo();
 let currentLevel = clamp(Number(store.get('capelin-run-level')) || 0, 0, UNLOCK_ALL ? LEVELS.length - 1 : unlockedUpTo());
@@ -523,8 +533,10 @@ function renderPicker(dir) {
   pvNum.textContent = t('picker.level', { n: selected + 1, total: LEVELS.length });
   pvName.textContent = lvName(lv);
   pvBlurb.textContent = lvBlurb(lv);
-  pvBest.hidden = !best; pvBest.textContent = best ? t('picker.best', { score: fmtNum(best) }) : '';
-  const stats = loadStats(), bits = starsFor(lv, stats), total = totalStars(stats);
+  const stats = loadStats(), far = farFor(lv, stats);
+  pvBest.hidden = !best && !far;
+  pvBest.textContent = best ? t('picker.bestBoth', { score: fmtNum(best), pct: pctOf(far) }) : t('picker.bestFar', { pct: pctOf(far) });
+  const bits = starsFor(lv, stats), total = totalStars(stats);
   pvStars.innerHTML = STAR_BITS.map(b => starSvg(bits & b)).join('');
   pvStars.setAttribute('aria-label', t('stars.of', { n: starCount(bits) })); pvStars.setAttribute('role', 'img');
   pvTotal.innerHTML = starSvg(true) + `<span>${total}/${maxStars()}</span>`;
@@ -575,6 +587,7 @@ function start(i = currentLevel) {
   if (isLocked(i)) return;
   hideSay();
   currentLevel = i; store.set('capelin-run-level', String(i));
+  countAttempt(LEVELS[i]); quickRetry = false; endPanel.classList.remove('quick');
   Snd.init(); Snd.start(); Snd.setUnder(false);
   st = newState(0, i);
   running = true; holding = false;
@@ -588,9 +601,11 @@ function endGame(reason) {
   running = false; holding = false; hideSay();
   Snd.end(); Snd.setUnder(false);
   const lv = st.level, score = st.score, best = bestFor(lv), isBest = score > best;
+  const starsBefore = starsFor(lv);                  // before saving the best score, which counts toward stars
   if (isBest) store.set(bestKey(lv), String(score));
+  const complete = reason === 'complete', far = complete ? 1 : clamp(st.progress, 0, 1), farBefore = farFor(lv);
+  if (far > farBefore) store.set(farKey(lv), far.toFixed(3));
   endLevel.textContent = t('end.level', { n: st.levelIdx + 1, name: lvName(lv) });
-  const complete = reason === 'complete';
   if (complete && st.levelIdx + 1 < LEVELS.length && isLocked(st.levelIdx + 1)) store.set('capelin-run-unlocked', String(st.levelIdx + 1));
   endTitle.textContent = complete ? t('end.home') : caughtBy(reason);
   endScore.hidden = false;
@@ -606,8 +621,25 @@ function endGame(reason) {
   nextBtn.dataset.level = next;
   if (next >= 0) nextBtn.textContent = t('end.next', { name: lvName(LEVELS[next]) });
   againBtn.className = next >= 0 ? 'secondary' : 'primary';
-  showStars(st.level, recordStars(st, complete));    // before outfits, so stars can unlock them
+  const starRes = recordStars(st, complete, starsBefore);   // before outfits, so stars can unlock them
+  showStars(st.level, starRes);
   const fresh = recordRun(st, complete);             // outfits earned this run
+  // A loss with nothing new to celebrate gets the compact try-again card: tap anywhere to go again.
+  // Finishing a level, or earning a star or outfit, gets the full results.
+  quickRetry = !complete && !fresh.length && starRes.after === starRes.before;
+  endPanel.classList.toggle('quick', quickRetry);
+  retryLock = 0.45;                                  // so a press from the moment you were caught doesn't restart you
+  if (quickRetry) endLevel.textContent += ' \u00b7 ' + t('retry.attempt', { n: attemptsFor(lv) });
+  againBtn.textContent = quickRetry ? t('retry.again') : t('end.again');
+  retryHint.hidden = !quickRetry; retryHint.textContent = t('retry.hint');
+  endFar.hidden = complete;
+  if (!complete) {
+    const bestFar = Math.max(far, farBefore);
+    farFill.style.width = (far * 100).toFixed(1) + '%'; farBest.style.left = (bestFar * 100).toFixed(1) + '%';
+    const farthest = far > farBefore && farBefore > 0;
+    farText.textContent = farthest ? t('retry.farthest', { pct: pctOf(far) }) : t('retry.far', { pct: pctOf(far), best: pctOf(bestFar) });
+    farText.classList.toggle('new', farthest);
+  }
   endBest.innerHTML = isBest && score > 0 ? `<span class="newbest">${t('end.newBest')}</span>` : t('end.best', { n: fmtNum(Math.max(best, score)) });
   hud.hidden = true; endPanel.hidden = false;
   showUnlocks(fresh);
@@ -743,6 +775,7 @@ function quitRun() {
 function frame(now) {
   const dt = last ? clamp((now - last) / 1000, 0, 0.05) : 0;
   last = now;
+  if (retryLock > 0) retryLock -= dt;
   if (running) { if (!paused) { update(dt); if (running) updateHud(); } } else idle(dt);
   const showPause = running && !paused;
   if (pauseBtn.hidden === showPause) pauseBtn.hidden = !showPause;
@@ -760,7 +793,10 @@ function syncMute() {
 muteBtn.addEventListener('click', () => { Snd.init(); Snd.toggle(); syncMute(); });
 syncMute();
 
+// After a loss, tap anywhere (except a button) to try again straight away
+const canQuickRetry = () => !running && quickRetry && !endPanel.hidden && retryLock <= 0;
 stage.addEventListener('pointerdown', e => {
+  if (canQuickRetry() && !e.target.closest('button')) { e.preventDefault(); start(currentLevel); return; }
   if (e.target.closest('.panel, .mute, .pausebtn') || paused) return;
   if (running) { holding = true; e.preventDefault(); }
 });
@@ -780,6 +816,7 @@ window.addEventListener('keydown', e => {
     store.set('capelin-run-unlocked', String(LEVELS.length - 1)); renderPicker(); return;
   }
   if (e.code === 'KeyM' && !e.repeat) { Snd.init(); Snd.toggle(); syncMute(); return; }
+  if (!running && e.code === 'Space' && (e.repeat || (!endPanel.hidden && retryLock > 0))) { e.preventDefault(); return; }   // a held key from the last run
   if (e.code !== 'Space' && e.code !== 'ArrowDown') return;
   if (running) { e.preventDefault(); holding = true; }
   else if (e.code === 'Space' && !(document.activeElement instanceof HTMLButtonElement)) { e.preventDefault(); start(startPanel.hidden ? currentLevel : selected); }

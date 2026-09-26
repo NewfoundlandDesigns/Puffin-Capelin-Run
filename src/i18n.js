@@ -62,6 +62,9 @@ const TEXT = {
     'note.capelin': v => `${v.n} capelin`, 'note.golden': v => `${v.n} capelin, golden ×${v.m}`, 'note.best': 'Biggest drop yet',
     'say.phew': 'Phew!', 'say.peckish': 'Getting a bit peckish...',
     'stars.home': 'Make it home by nightfall', 'stars.feed': 'Make it home without your puffling running out of food',
+    'retry.again': 'Try again', 'retry.hint': 'Tap anywhere or press Space to try again', 'retry.attempt': 'Attempt {n}',
+    'retry.far': '{pct}% of the way \u00b7 best {best}%', 'retry.farthest': '{pct}% of the way \u00b7 farthest yet!',
+    'picker.bestBoth': 'Best {score} \u00b7 {pct}%', 'picker.bestFar': 'Best {pct}%',
     'stars.score': 'Score {n}', 'stars.new': 'New', 'stars.of': '{n} of 3 stars', 'stars.total': 'Stars: {n} of {total}'
   },
   fr: {
@@ -107,6 +110,9 @@ const TEXT = {
     'note.capelin': v => `${v.n} ${pluralFr(v.n, 'capelan', 'capelans')}`, 'note.golden': v => `${v.n} ${pluralFr(v.n, 'capelan', 'capelans')}, doré ×${v.m}`, 'note.best': 'Plus grosse livraison!',
     'say.phew': 'Ouf!', 'say.peckish': 'J’ai un petit creux...',
     'stars.home': 'Rentre avant la nuit', 'stars.feed': 'Rentre sans que ton poussin manque de nourriture',
+    'retry.again': 'R\u00e9essayer', 'retry.hint': 'Touche l\u2019\u00e9cran ou appuie sur Espace pour r\u00e9essayer', 'retry.attempt': 'Essai {n}',
+    'retry.far': '{pct}\u00a0% du chemin \u00b7 record {best}\u00a0%', 'retry.farthest': '{pct}\u00a0% du chemin \u00b7 plus loin que jamais!',
+    'picker.bestBoth': 'Record {score} \u00b7 {pct}\u00a0%', 'picker.bestFar': 'Record {pct}\u00a0%',
     'stars.score': 'Obtiens {n} points', 'stars.new': 'Nouveau', 'stars.of': '{n} étoiles sur 3', 'stars.total': 'Étoiles : {n} sur {total}'
   }
 };
