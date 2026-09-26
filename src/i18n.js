@@ -60,7 +60,9 @@ const TEXT = {
     'pop.gullTook': 'A gull took your catch', 'pop.gannet': 'A gannet knocked your catch loose', 'pop.berg': 'Bumped an iceberg',
     'pop.jaeger': 'A jaeger stole your catch', 'pop.whoa': 'Whoa!', 'pop.home': 'Home!', 'pop.homeBonus': '+{n} home bonus',
     'note.capelin': v => `${v.n} capelin`, 'note.golden': v => `${v.n} capelin, golden ×${v.m}`, 'note.best': 'Biggest drop yet',
-    'say.phew': 'Phew!', 'say.peckish': 'Getting a bit peckish...'
+    'say.phew': 'Phew!', 'say.peckish': 'Getting a bit peckish...',
+    'stars.home': 'Make it home by nightfall', 'stars.feed': 'Make it home without your puffling running out of food',
+    'stars.score': 'Score {n}', 'stars.new': 'New', 'stars.of': '{n} of 3 stars', 'stars.total': 'Stars: {n} of {total}'
   },
   fr: {
     'page.title': 'Beakful : un jeu de macareux',
@@ -103,7 +105,9 @@ const TEXT = {
     'pop.gullTook': 'Un goéland t’a volé tes poissons', 'pop.gannet': 'Un fou de Bassan t’a fait échapper tes poissons', 'pop.berg': 'Tu as heurté un iceberg',
     'pop.jaeger': 'Un labbe t’a volé tes poissons', 'pop.whoa': 'Oups!', 'pop.home': 'Arrivé!', 'pop.homeBonus': '+{n} prime de retour',
     'note.capelin': v => `${v.n} ${pluralFr(v.n, 'capelan', 'capelans')}`, 'note.golden': v => `${v.n} ${pluralFr(v.n, 'capelan', 'capelans')}, doré ×${v.m}`, 'note.best': 'Plus grosse livraison!',
-    'say.phew': 'Ouf!', 'say.peckish': 'J’ai un petit creux...'
+    'say.phew': 'Ouf!', 'say.peckish': 'J’ai un petit creux...',
+    'stars.home': 'Rentre avant la nuit', 'stars.feed': 'Rentre sans que ton poussin manque de nourriture',
+    'stars.score': 'Obtiens {n} points', 'stars.new': 'Nouveau', 'stars.of': '{n} étoiles sur 3', 'stars.total': 'Étoiles : {n} sur {total}'
   }
 };
 
@@ -153,7 +157,11 @@ const DATA = {
       boots: { name: 'Bottes de caoutchouc', unlock: 'Livre 250 capelans au total.' },
       vamps: { name: 'Bas de laine tricotés', unlock: 'Joue 20 parties.' },
       fisherman: { name: 'Bottes de pêcheur', unlock: 'Termine Cap St. Mary’s.' },
-      golden: { name: 'Macareux doré', unlock: 'Attrape 50 capelans dorés au total.' }
+      golden: { name: 'Macareux doré', unlock: 'Attrape 50 capelans dorés au total.' },
+      starglasses: { name: 'Lunettes étoiles', unlock: 'Gagne 5 étoiles.' },
+      medal: { name: 'Médaille d’or', unlock: 'Gagne 10 étoiles.' },
+      aurora: { name: 'Plumes d’aurore boréale', unlock: 'Gagne 15 étoiles.' },
+      goldcrown: { name: 'Couronne dorée', unlock: 'Gagne les 21 étoiles.' }
     },
     lines: {
       hungry: ['NOURRIS-MOIIII!', 'Grouille-toi, mon vieux!', 'Mon bedon fait plus de bruit que la mer!', 'C’est l’heure du capelan?',

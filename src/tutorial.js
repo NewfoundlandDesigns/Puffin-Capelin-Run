@@ -126,7 +126,7 @@ function endTutorial() {
   Snd.fanfare(); Snd.setUnder(false);
   endLevel.textContent = t('tut.doneLevel');
   endTitle.textContent = t('tut.doneTitle');
-  endScore.hidden = true;
+  endScore.hidden = true; endStars.hidden = true;
   endStats.textContent = t('tut.doneText', { name: lvName(LEVELS[0]) });
   endBest.textContent = '';
   nextBtn.hidden = false; nextBtn.dataset.level = 0; nextBtn.textContent = t('picker.playLevel', { name: lvName(LEVELS[0]) });

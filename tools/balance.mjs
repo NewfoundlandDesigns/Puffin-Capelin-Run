@@ -70,7 +70,8 @@ function play(levelIdx, skill) {
   return {
     title: els.endTitle.textContent, score: Number(els.endScore.textContent) || 0,
     complete: els.endTitle.textContent === T.t('end.home'),
-    stats: els.endStats.textContent, losses: { ...losses }
+    stats: els.endStats.textContent, losses: { ...losses },
+    stars: els.endStars.children.map(li => li.className.includes('got'))       // store is reset per run, so these are this run's
   };
 }
 
@@ -82,15 +83,17 @@ const SKILLS = {
 const pct = (arr, q) => { const a = arr.slice().sort((x, y) => x - y); return a.length ? a[Math.min(a.length - 1, Math.floor(q * a.length))] : 0; };
 for (const [name, skill] of Object.entries(SKILLS)) {
   console.log(`\n== ${name} player, ${RUNS} runs per level ==`);
-  console.log('level'.padEnd(20) + 'home'.padStart(6) + 'median'.padStart(8) + 'p75'.padStart(7) + 'p90'.padStart(7) + 'best'.padStart(7) + '   how runs ended / catches lost');
+  console.log('level'.padEnd(20) + 'home'.padStart(6) + 'median'.padStart(8) + 'p75'.padStart(7) + 'p90'.padStart(7) + 'best'.padStart(7) + 'home med'.padStart(10) + 'stars 1 2 3'.padStart(14) + '   how runs ended / catches lost');
   for (let i = 0; i < T.LEVELS.length; i++) {
     const rs = []; for (let r = 0; r < RUNS; r++) rs.push(play(i, skill));
     const scores = rs.map(r => r.score), ends = {}, lost = {};
     for (const r of rs) { ends[r.title] = (ends[r.title] || 0) + 1; for (const [k, v] of Object.entries(r.losses)) lost[k] = (lost[k] || 0) + v; }
-    const home = rs.filter(r => r.complete).length;
+    const home = rs.filter(r => r.complete).length, homeScores = rs.filter(r => r.complete).map(r => r.score);
+    const starPct = [0, 1, 2].map(i => Math.round(100 * rs.filter(r => r.stars[i]).length / RUNS) + '%').join(' ');
     const endStr = Object.entries(ends).map(([k, v]) => `${k} ${v}`).join(', ');
     const lostStr = Object.entries(lost).map(([k, v]) => `${k} ${(v / RUNS).toFixed(1)}/run`).join(', ');
     console.log(T.LEVELS[i].name.padEnd(20) + `${home}/${RUNS}`.padStart(6) + String(pct(scores, 0.5)).padStart(8) + String(pct(scores, 0.75)).padStart(7) +
-      String(pct(scores, 0.9)).padStart(7) + String(Math.max(...scores)).padStart(7) + `   ${endStr} | ${lostStr || 'none'}`);
+      String(pct(scores, 0.9)).padStart(7) + String(Math.max(...scores)).padStart(7) +
+      String(homeScores.length ? pct(homeScores, 0.5) : '-').padStart(10) + starPct.padStart(14) + `   ${endStr} | ${lostStr || 'none'}`);
   }
 }

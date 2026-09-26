@@ -20,7 +20,8 @@ const ctx = new Proxy({}, {
 });
 const els = {};
 const el = id => ({
-  id, hidden: id === 'say' || id === 'wardPanel' || id === 'pausePanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '', innerHTML: '',
+  id, hidden: id === 'say' || id === 'wardPanel' || id === 'pausePanel', disabled: false, dataset: {}, style: {}, className: '', textContent: '',
+  _html: '', get innerHTML() { return this._html; }, set innerHTML(v) { this._html = v; this.children = []; },   // like the DOM: replaces the children
   children: [], offsetWidth: 1, parentElement: {},
   classList: { toggle() {}, add() {}, remove() {} },
   querySelector: () => ({ style: {}, focus() {}, classList: { toggle() {}, remove() {} } }),
@@ -41,7 +42,7 @@ Object.assign(globalThis, {
   window: { addEventListener(e, f) { winHandlers[e] = f; }, devicePixelRatio: 1 },
   location: { search: '?dev' }                          // testing mode: every level and outfit open
 });
-(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, get BURROW() { return BURROW; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds, TEXT, DATA, TUT_STEPS, setLang, t, get LANG() { return LANG; } };');
+(0, eval)(js + ';globalThis.__T = { get st() { return st; }, get running() { return running; }, get BURROW() { return BURROW; }, start, spawnWhale, spawnGannet, deliver, LEVELS, OUTFITS, SLOTS, loadStats, outfitEarned, recordRun, wearOutfit, takeOff, wornLook, wornIds, TEXT, DATA, TUT_STEPS, setLang, t, recordStars, starsFor, totalStars, maxStars, get LANG() { return LANG; } };');
 const T = globalThis.__T;
 const SEA = 270;
 

@@ -44,6 +44,7 @@ gannets.js   plunge-diving gannets: shadow warning, spear dive aimed at puffin o
 finale.js    end-of-level zoom and crash landing at the home colony
 tutorial.js  guided How to play run (TUT_STEPS)
 chatter.js   puffling and puffin speech bubbles (edit the lines here)
+stars.js     three stars per level (finish, feed, score): recordStars, starsFor, totalStars
 outfits.js   SLOTS and OUTFITS (unlock tests + looks), lifetime stats, what's worn, card drawing
 game.js      DOM refs, state (newState), update loop, spawning, collisions, HUD,
              level picker with live preview, start/end flow, input, main loop
@@ -61,6 +62,14 @@ Key ideas:
 - Puffin drawing: `drawPuffin(x, y, scale, ang, opts)`. `opts.stand = 1` uses the upright
   standing drawing (lean = ang - UPRIGHT); otherwise the horizontal flying/swimming one.
   Landing and finale poses set `pose.stand` per phase. Wing: `lift` raises, `fold` tucks.
+- Stars (stars.js): finish / feed / score, the same on every level, stored as a bit mask per
+  level (capelin-run-stars) and kept once earned. Feed = made it home and minHunger > 0 (never
+  needed a last chance); "never in the red" was tried and the balance check showed it was near
+  impossible. Score = level.starScore, from tools/balance.mjs. recordStars() runs before
+  recordRun() at endGame so stars can unlock outfits (5, 10, 15, all). Old progress counts:
+  finished levels give star 1, best scores give star 3.
+- Outfit unlocks are deliberately varied (Mark's wish): finishing levels, lifetime play, a
+  score, and star totals. Keep that mix when adding items.
 - Languages: never hard-code player-facing text. Use t('key') (add the key to TEXT.en and
   TEXT.fr) or the data helpers (lvName, lvBlurb, outName, outUnlock, slotName, slotLabel,
   tutStepText, lines). Static HTML uses data-i18n / data-i18n-aria. French is Canadian French

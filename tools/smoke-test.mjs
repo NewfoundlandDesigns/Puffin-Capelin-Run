@@ -177,6 +177,39 @@ hold(false);
 check('tutorial completes', els.endTitle.textContent === 'You\u2019re ready', els.endTitle.textContent);
 check('finishing the tutorial earns the reading glasses', els.unlockName.textContent.includes('reading glasses'), els.unlockName.textContent);
 
+// 4b. Stars: finish, feed (never running out of food, all the way home), score; kept once earned
+{
+  const { resetStore } = await import('./harness.mjs');
+  resetStore();
+  const lv = T.LEVELS[0], run = extra => ({ level: lv, score: 0, minHunger: 0.5, ...extra });
+  let r = T.recordStars(run({}), true);
+  check('finishing well earns finish and feed', r.after === 3, `bits ${r.after}`);
+  resetStore();
+  r = T.recordStars(run({ minHunger: 0 }), true);
+  check('running out of food loses the feed star', r.after === 1, `bits ${r.after}`);
+  r = T.recordStars(run({ minHunger: 0, score: lv.starScore }), false);
+  check('the score star counts on any run, and stars are kept', r.after === 5 && r.before === 1, `bits ${r.before} -> ${r.after}`);
+  r = T.recordStars(run({ minHunger: 0 }), false);
+  check('a worse run takes nothing away', r.after === 5);
+  resetStore();
+  localStorage.setItem('capelin-run-unlocked', '3');                 // finished levels 1-3 before stars existed
+  localStorage.setItem('capelin-run-best-' + T.LEVELS[1].id, String(T.LEVELS[1].starScore));
+  check('old progress counts: finished levels and best scores', T.totalStars() === 4 && T.starsFor(T.LEVELS[1]) === 5, `total ${T.totalStars()}`);
+  // star outfits unlock at 5, 10, 15 and every star
+  resetStore();
+  const bits = {}; T.LEVELS.slice(0, 2).forEach(l => { bits[l.id] = 7; });
+  localStorage.setItem('capelin-run-stars', JSON.stringify(bits));
+  const earned = id => T.outfitEarned(T.OUTFITS.find(o => o.id === id));
+  check('5 stars earns the star glasses, not the medal', earned('starglasses') && !earned('medal'));
+  T.LEVELS.forEach(l => { bits[l.id] = 7; }); localStorage.setItem('capelin-run-stars', JSON.stringify(bits));
+  check('every star earns the medal, aurora and golden crown', ['medal', 'aurora', 'goldcrown'].every(earned) && T.totalStars() === T.maxStars());
+  resetStore();
+}
+// 4c. A real run records its stars and shows them on the end screen
+T.start(0); quiet(T.st);
+for (let f = 0; f < 60 * 200 && !ended(); f++) { T.st.p.inv = Math.max(T.st.p.inv, 2); T.st.hunger = 1; frame(); }
+check('a level finished well shows two stars at the end', els.endStars.children.length === 3 && !els.endStars.hidden && T.starsFor(T.LEVELS[0]) & 3, `bits ${T.starsFor(T.LEVELS[0])}`);
+
 // 5. French: every English text has a French version, all game data is translated, and a run
 //    played in French shows French
 {

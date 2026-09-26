@@ -1,9 +1,10 @@
 /* Levels. Each has a name and its own mix of hazards. Times are seconds of game time;
    ranges are [min, max]. hungerSeconds is how long a full puffling lasts without food
-   (raise it to make a level more generous). Add a level by adding an entry here. */
+   (raise it to make a level more generous). starScore is the Score star's target: about what a
+   good run that makes it home scores (from tools/balance.mjs). Add a level by adding an entry here. */
 const LEVELS = [
   {
-    id: 'capelin-scull',
+    id: 'capelin-scull', starScore: 5000,
     name: 'Capelin Scull',
     scene: 'coast',
     blurb: 'Seals below and thieving gulls above. A good place to start.',
@@ -14,7 +15,7 @@ const LEVELS = [
     hungerSeconds: 25
   },
   {
-    id: 'gull-island',
+    id: 'gull-island', starScore: 5000,
     name: 'Gull Island',
     scene: 'island',
     blurb: 'Seals below, and a few great black-backed gulls hunting from above. Dive to shake them.',
@@ -25,7 +26,7 @@ const LEVELS = [
     hungerSeconds: 25
   },
   {
-    id: 'baccalieu-tickle',
+    id: 'baccalieu-tickle', starScore: 4500,
     name: 'Baccalieu Tickle',
     scene: 'storm',
     blurb: 'Rough water, more seals and more hunting gulls, with nowhere safe for long.',
@@ -36,7 +37,7 @@ const LEVELS = [
     hungerSeconds: 25
   },
   {
-    id: 'cape-st-marys',
+    id: 'cape-st-marys', starScore: 4500,
     name: "Cape St. Mary's",
     scene: 'cliffs',
     blurb: 'Jaegers chase any puffin carrying fish. Dive to lose them. Watch for the odd hunting gull.',
@@ -48,7 +49,7 @@ const LEVELS = [
     hungerSeconds: 27
   },
   {
-    id: 'iceberg-alley',
+    id: 'iceberg-alley', starScore: 4000,
     name: 'Iceberg Alley',
     scene: 'ice',
     blurb: 'Icebergs drifting out of the fog, most of each one hidden underwater. A few jaegers about.',
@@ -61,7 +62,7 @@ const LEVELS = [
     hungerSeconds: 28
   },
   {
-    id: 'trinity-bay',
+    id: 'trinity-bay', starScore: 5500,
     name: 'Trinity Bay',
     scene: 'bay',
     blurb: 'Humpbacks lunge up through the capelin. When the bubbles rise, get out of the ring or dive deep under it. A few seals too.',
@@ -73,7 +74,7 @@ const LEVELS = [
     hungerSeconds: 30
   },
   {
-    id: 'funk-island',
+    id: 'funk-island', starScore: 5000,
     name: 'Funk Island',
     scene: 'funk',
     blurb: 'Gannets drop like spears from high above. When a shadow slides toward you, change depth or dive below it. A few whales too.',

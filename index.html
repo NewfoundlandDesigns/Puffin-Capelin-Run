@@ -73,7 +73,8 @@
     <div class="picker">
       <div class="preview" id="preview">
         <canvas id="pvCanvas" aria-hidden="true"></canvas>
-        <div class="pv-label"><span id="pvNum">Level 1</span><strong id="pvName">Capelin Scull</strong></div>
+        <div class="pv-label"><span id="pvNum">Level 1</span><strong id="pvName">Capelin Scull</strong><span class="pv-stars" id="pvStars"></span></div>
+        <span class="pv-total" id="pvTotal"></span>
         <span class="pv-best" id="pvBest" hidden></span>
         <span class="pv-lock" id="pvLock" hidden></span>
       </div>
@@ -100,6 +101,7 @@
     <p class="lvl" id="endLevel"></p>
     <h2 id="endTitle" data-i18n="end.nightFalls">Night falls</h2>
     <p class="big" id="endScore">0</p>
+    <ul class="stars" id="endStars" hidden></ul>
     <p id="endStats"></p>
     <p id="endBest" class="small"></p>
     <div class="unlock" id="endUnlock" hidden>
@@ -158,6 +160,7 @@
 <script src="src/finale.js"></script>
 <script src="src/tutorial.js"></script>
 <script src="src/chatter.js"></script>
+<script src="src/stars.js"></script>
 <script src="src/outfits.js"></script>
 <script src="src/game.js"></script>
 </body>
